@@ -9,6 +9,7 @@ import { AuditLog } from './collections/AuditLog'
 import { CaseStudies } from './collections/CaseStudies'
 import { Competitors } from './collections/Competitors'
 import { Media } from './collections/Media'
+import { PageMeta } from './collections/PageMeta'
 import { People } from './collections/People'
 import { Posts } from './collections/Posts'
 import { Products } from './collections/Products'
@@ -31,6 +32,38 @@ export default buildConfig({
     importMap: {
       baseDir: path.resolve(dirname),
     },
+    components: {
+      beforeDashboard: [
+        {
+          path: '@/components/admin/DashboardStats',
+          exportName: 'default',
+        },
+      ],
+    },
+    livePreview: {
+      collections: ['posts', 'case-studies', 'competitors', 'products'],
+      url: ({ data, collectionConfig }) => {
+        const base = process.env.NEXT_PUBLIC_SERVER_URL ?? 'http://localhost:3000'
+        const slug = String(data.slug ?? '')
+        const secret = process.env.PREVIEW_SECRET ?? ''
+        const secretParam = `secret=${encodeURIComponent(secret)}`
+
+        const ROUTES: Record<string, string> = {
+          'case-studies': `/resources/case-studies/${slug}`,
+          competitors: `/resources/compare/${slug}`,
+          products: `/products/${slug}`,
+          posts: `/resources/${slug}`,
+        }
+        const redirect = ROUTES[collectionConfig?.slug ?? ''] ?? `/resources/${slug}`
+
+        return `${base}/api/draft-enable?${secretParam}&redirect=${encodeURIComponent(redirect)}`
+      },
+      breakpoints: [
+        { label: 'Mobile', name: 'mobile', width: 375, height: 812 },
+        { label: 'Tablet', name: 'tablet', width: 768, height: 1024 },
+        { label: 'Desktop', name: 'desktop', width: 1280, height: 800 },
+      ],
+    },
   },
   collections: [
     Users,
@@ -41,6 +74,7 @@ export default buildConfig({
     People,
     Redirects,
     Media,
+    PageMeta,
     AuditLog,
   ],
   editor: lexicalEditor(),

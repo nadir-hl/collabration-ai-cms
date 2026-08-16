@@ -5,8 +5,12 @@ export const Products: CollectionConfig = {
   slug: 'products',
   admin: {
     useAsTitle: 'name',
-    // Editors don't need to edit core product pages
     hidden: ({ user }) => !['admin', 'approver', 'reviewer'].includes((user as any)?.role),
+    preview: (doc) => {
+      const base = process.env.NEXT_PUBLIC_SERVER_URL ?? 'http://localhost:3000'
+      const secret = process.env.PREVIEW_SECRET ?? ''
+      return `${base}/api/draft-enable?secret=${encodeURIComponent(secret)}&redirect=${encodeURIComponent(`/products/${doc.slug}`)}`
+    },
   },
   access: {
     read: () => true,

@@ -7,6 +7,11 @@ export const Posts: CollectionConfig = {
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'author', 'reviewStatus', 'updatedAt'],
+    preview: (doc) => {
+      const base = process.env.NEXT_PUBLIC_SERVER_URL ?? 'http://localhost:3000'
+      const secret = process.env.PREVIEW_SECRET ?? ''
+      return `${base}/api/draft-enable?secret=${encodeURIComponent(secret)}&redirect=${encodeURIComponent(`/resources/${doc.slug}`)}`
+    },
   },
   versions: {
     drafts: true,

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { draftMode } from 'next/headers'
 import Link from 'next/link'
 import { getPayload } from 'payload'
 import configPromise from '@payload-config'
@@ -14,11 +15,15 @@ type FactRow = {
   date?: string
 }
 
-async function getCompetitor(slug: string) {
+async function getCompetitor(slug: string, draft: boolean) {
   const payload = await getPayload({ config: configPromise })
   const result = await payload.find({
     collection: 'competitors',
-    where: { slug: { equals: slug }, _status: { equals: 'published' } },
+    where: draft
+      ? { slug: { equals: slug } }
+      : { slug: { equals: slug }, _status: { equals: 'published' } },
+    draft,
+    overrideAccess: draft,
     limit: 1,
   })
   return result.docs[0] ?? null
@@ -26,7 +31,7 @@ async function getCompetitor(slug: string) {
 
 export async function generateMetadata({ params }: Args): Promise<Metadata> {
   const { slug } = await params
-  const c = await getCompetitor(slug)
+  const c = await getCompetitor(slug, false)
   if (!c) return {}
   return {
     title: `Collaboration.AI vs. ${c.name}`,
@@ -40,7 +45,8 @@ function formatDate(iso: string) {
 
 export default async function CompetitorPage({ params }: Args) {
   const { slug } = await params
-  const c = await getCompetitor(slug)
+  const { isEnabled: isDraft } = await draftMode()
+  const c = await getCompetitor(slug, isDraft)
   if (!c) notFound()
 
   const facts = (c.facts as FactRow[] | undefined) ?? []
@@ -95,12 +101,8 @@ export default async function CompetitorPage({ params }: Args) {
               <thead>
                 <tr className="border-b border-[--color-border] bg-[--color-bg-subtle]">
                   <th className="text-left px-5 py-3 font-semibold text-[--color-text-muted] w-1/4">Claim</th>
-                  <th className="text-left px-5 py-3 font-semibold text-[--color-brand-700] w-1/4">
-                    Collaboration.AI
-                  </th>
-                  <th className="text-left px-5 py-3 font-semibold text-[--color-text-muted] w-1/4">
-                    {c.name}
-                  </th>
+                  <th className="text-left px-5 py-3 font-semibold text-[--color-brand-700] w-1/4">Collaboration.AI</th>
+                  <th className="text-left px-5 py-3 font-semibold text-[--color-text-muted] w-1/4">{c.name}</th>
                   <th className="text-left px-5 py-3 font-semibold text-[--color-text-muted] w-1/4">Source</th>
                 </tr>
               </thead>
@@ -112,12 +114,8 @@ export default async function CompetitorPage({ params }: Args) {
                     <td className="px-5 py-4 text-[--color-text-muted]">{fact.theirs ?? '—'}</td>
                     <td className="px-5 py-4">
                       {fact.source ? (
-                        <a
-                          href={fact.source}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[--color-brand-600] hover:underline break-all"
-                        >
+                        <a href={fact.source} target="_blank" rel="noopener noreferrer"
+                          className="text-[--color-brand-600] hover:underline break-all">
                           Source
                         </a>
                       ) : (
@@ -136,12 +134,9 @@ export default async function CompetitorPage({ params }: Args) {
           </div>
         )}
 
-        {/* Verdict */}
         {c.verdict && (
           <div className="mt-8 rounded-xl border border-[--color-brand-300] bg-[--color-brand-50] p-6">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-[--color-brand-700] mb-2">
-              Our take
-            </h2>
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-[--color-brand-700] mb-2">Our take</h2>
             <p className="text-[--color-text] leading-relaxed">{c.verdict}</p>
           </div>
         )}
@@ -153,10 +148,8 @@ export default async function CompetitorPage({ params }: Args) {
           <Link href="/resources/compare" className="text-sm font-medium text-[--color-brand-600] hover:underline">
             ← Back to comparison map
           </Link>
-          <Link
-            href="/contact"
-            className="rounded-lg bg-[--color-brand-600] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[--color-brand-700] transition-colors"
-          >
+          <Link href="/contact"
+            className="rounded-lg bg-[--color-brand-600] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[--color-brand-700] transition-colors">
             Talk to us
           </Link>
         </div>

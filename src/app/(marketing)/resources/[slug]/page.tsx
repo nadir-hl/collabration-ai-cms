@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { draftMode } from 'next/headers'
 import Link from 'next/link'
 import { getPayload } from 'payload'
 import configPromise from '@payload-config'
@@ -7,11 +8,15 @@ import { RichText } from '@/components/RichText'
 
 type Args = { params: Promise<{ slug: string }> }
 
-async function getPost(slug: string) {
+async function getPost(slug: string, draft: boolean) {
   const payload = await getPayload({ config: configPromise })
   const result = await payload.find({
     collection: 'posts',
-    where: { slug: { equals: slug }, _status: { equals: 'published' } },
+    where: draft
+      ? { slug: { equals: slug } }
+      : { slug: { equals: slug }, _status: { equals: 'published' } },
+    draft,
+    overrideAccess: draft,
     limit: 1,
   })
   return result.docs[0] ?? null
@@ -19,7 +24,7 @@ async function getPost(slug: string) {
 
 export async function generateMetadata({ params }: Args): Promise<Metadata> {
   const { slug } = await params
-  const post = await getPost(slug)
+  const post = await getPost(slug, false)
   if (!post) return {}
   return {
     title: post.title,
@@ -33,7 +38,8 @@ function formatDate(iso: string) {
 
 export default async function PostPage({ params }: Args) {
   const { slug } = await params
-  const post = await getPost(slug)
+  const { isEnabled: isDraft } = await draftMode()
+  const post = await getPost(slug, isDraft)
   if (!post) notFound()
 
   const authorName =

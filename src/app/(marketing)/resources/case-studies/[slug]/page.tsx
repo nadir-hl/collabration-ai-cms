@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { draftMode } from 'next/headers'
 import Link from 'next/link'
 import { getPayload } from 'payload'
 import configPromise from '@payload-config'
@@ -7,11 +8,15 @@ import { RichText } from '@/components/RichText'
 
 type Args = { params: Promise<{ slug: string }> }
 
-async function getCaseStudy(slug: string) {
+async function getCaseStudy(slug: string, draft: boolean) {
   const payload = await getPayload({ config: configPromise })
   const result = await payload.find({
     collection: 'case-studies',
-    where: { slug: { equals: slug }, _status: { equals: 'published' } },
+    where: draft
+      ? { slug: { equals: slug } }
+      : { slug: { equals: slug }, _status: { equals: 'published' } },
+    draft,
+    overrideAccess: draft,
     limit: 1,
   })
   return result.docs[0] ?? null
@@ -19,7 +24,7 @@ async function getCaseStudy(slug: string) {
 
 export async function generateMetadata({ params }: Args): Promise<Metadata> {
   const { slug } = await params
-  const cs = await getCaseStudy(slug)
+  const cs = await getCaseStudy(slug, false)
   if (!cs) return {}
   return {
     title: `${cs.client} — Case Study`,
@@ -29,7 +34,8 @@ export async function generateMetadata({ params }: Args): Promise<Metadata> {
 
 export default async function CaseStudyPage({ params }: Args) {
   const { slug } = await params
-  const cs = await getCaseStudy(slug)
+  const { isEnabled: isDraft } = await draftMode()
+  const cs = await getCaseStudy(slug, isDraft)
   if (!cs) notFound()
 
   const approverName =
@@ -72,31 +78,24 @@ export default async function CaseStudyPage({ params }: Args) {
 
       {/* Body */}
       <article className="container py-12 md:py-16 max-w-3xl space-y-12">
-        {/* Problem */}
         {cs.problem && (
           <section>
             <h2 className="text-lg font-bold text-[--color-brand-900] mb-4">The problem</h2>
             <RichText data={cs.problem as Parameters<typeof RichText>[0]['data']} />
           </section>
         )}
-
-        {/* What we did */}
         {cs.whatWeDid && (
           <section>
             <h2 className="text-lg font-bold text-[--color-brand-900] mb-4">What we did</h2>
             <RichText data={cs.whatWeDid as Parameters<typeof RichText>[0]['data']} />
           </section>
         )}
-
-        {/* Outcome */}
         {cs.outcome && (
           <section>
             <h2 className="text-lg font-bold text-[--color-brand-900] mb-4">The outcome</h2>
             <RichText data={cs.outcome as Parameters<typeof RichText>[0]['data']} />
           </section>
         )}
-
-        {/* Pull quote */}
         {cs.quote && typeof cs.quote === 'object' &&
           'text' in cs.quote && cs.quote.text && (
           <blockquote className="border-l-4 border-[--color-brand-500] pl-6 py-2">
