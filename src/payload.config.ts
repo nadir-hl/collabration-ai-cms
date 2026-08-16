@@ -29,10 +29,21 @@ const SAMPLE_USERS = [
 export default buildConfig({
   admin: {
     user: Users.slug,
+    theme: 'light',
     importMap: {
       baseDir: path.resolve(dirname),
     },
     components: {
+      graphics: {
+        Logo: {
+          path: '@/components/admin/Logo',
+          exportName: 'AdminLogo',
+        },
+        Icon: {
+          path: '@/components/admin/Logo',
+          exportName: 'AdminIcon',
+        },
+      },
       beforeDashboard: [
         {
           path: '@/components/admin/DashboardStats',
@@ -90,13 +101,25 @@ export default buildConfig({
   }),
   sharp,
   onInit: async (payload) => {
-    const { totalDocs } = await payload.find({ collection: 'users', limit: 0 })
-    if (totalDocs === 0) {
-      payload.logger.info('Seeding sample users...')
-      for (const user of SAMPLE_USERS) {
-        await payload.create({ collection: 'users', data: user })
+    for (const user of SAMPLE_USERS) {
+      const existing = await payload.find({
+        collection: 'users',
+        where: { email: { equals: user.email } },
+        limit: 1,
+        overrideAccess: true,
+      })
+      if (existing.totalDocs === 0) {
+        await payload.create({ collection: 'users', data: user, overrideAccess: true })
+        payload.logger.info(`Created sample user: ${user.email} (${user.role})`)
+      } else if ((existing.docs[0] as { role?: string })?.role !== user.role) {
+        await payload.update({
+          collection: 'users',
+          id: existing.docs[0].id,
+          data: { role: user.role },
+          overrideAccess: true,
+        })
+        payload.logger.info(`Patched role on existing user: ${user.email} → ${user.role}`)
       }
-      payload.logger.info('Seeded 4 sample users (admin / approver / reviewer / editor)')
     }
   },
 })

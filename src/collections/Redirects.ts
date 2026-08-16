@@ -7,7 +7,7 @@ export const Redirects: CollectionConfig = {
     useAsTitle: 'from',
     defaultColumns: ['from', 'to', 'statusCode', 'retired'],
     // Redirect management is an admin/approver concern
-    hidden: ({ user }) => !['admin', 'approver'].includes((user as any)?.role),
+    hidden: ({ user }) => !['admin', 'approver'].includes((user as { role?: string } | null)?.role),
   },
   access: {
     read: isAdminOrApprover,

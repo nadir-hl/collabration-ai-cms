@@ -1,0 +1,11 @@
+<svg width="264" height="44" viewBox="0 0 264 44" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Collaboration.AI">
+  <title>Collaboration.AI</title>
+  <!-- Venn mark: human × AI intersection -->
+  <circle cx="15" cy="22" r="13" fill="#0D0D12"/>
+  <circle cx="31" cy="22" r="13" fill="#2563EB"/>
+  <clipPath id="venn"><circle cx="15" cy="22" r="13"/></clipPath>
+  <circle cx="31" cy="22" r="13" fill="#ffffff" clip-path="url(#venn)" opacity="0.22"/>
+  <!-- Wordmark -->
+  <text x="54" y="29" font-family="-apple-system, system-ui, 'Segoe UI', sans-serif" font-size="19" font-weight="700" letter-spacing="-0.5" fill="#0D0D12">Collaboration</text>
+  <text x="206" y="29" font-family="-apple-system, system-ui, 'Segoe UI', sans-serif" font-size="19" font-weight="800" letter-spacing="-0.5" fill="#2563EB">.AI</text>
+</svg>

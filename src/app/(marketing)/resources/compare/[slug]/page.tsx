@@ -4,6 +4,7 @@ import { draftMode } from 'next/headers'
 import Link from 'next/link'
 import { getPayload } from 'payload'
 import configPromise from '@payload-config'
+import { BadgeCheck, ArrowLeft, ExternalLink } from 'lucide-react'
 
 type Args = { params: Promise<{ slug: string }> }
 
@@ -61,9 +62,9 @@ export default async function CompetitorPage({ params }: Args) {
       <div className="border-b border-[--color-border]">
         <div className="container py-3">
           <nav className="flex items-center gap-2 text-sm text-[--color-text-muted]">
-            <Link href="/resources" className="hover:text-[--color-text]">Resources</Link>
+            <Link href="/resources" className="hover:text-[--color-text] transition-colors">Resources</Link>
             <span>/</span>
-            <Link href="/resources/compare" className="hover:text-[--color-text]">Comparison map</Link>
+            <Link href="/resources/compare" className="hover:text-[--color-text] transition-colors">Comparison map</Link>
             <span>/</span>
             <span className="text-[--color-text]">vs. {c.name}</span>
           </nav>
@@ -71,87 +72,120 @@ export default async function CompetitorPage({ params }: Args) {
       </div>
 
       {/* Header */}
-      <header className="border-b border-[--color-border]">
-        <div className="container py-12 max-w-4xl">
-          <p className="text-xs font-semibold uppercase tracking-widest text-[--color-brand-500] mb-3">
-            Competitor intelligence
-          </p>
-          <h1 className="text-3xl md:text-4xl font-bold text-[--color-brand-900] mb-4">
-            Collaboration.AI vs. {c.name}
+      <header className="bg-glow-hero border-b border-[--color-border]">
+        <div className="container py-14 md:py-18 max-w-4xl">
+          <div className="section-label mb-5">Competitor intelligence</div>
+          <h1 className="display-md mb-4">
+            Collaboration.AI <span className="text-gradient">vs. {c.name}</span>
           </h1>
           {c.positioning && (
-            <p className="text-[--color-text-muted] max-w-2xl leading-relaxed">{c.positioning}</p>
+            <p className="text-body-lg text-[--color-text-muted] max-w-2xl mb-6 leading-relaxed">
+              {c.positioning}
+            </p>
           )}
-          <div className="mt-5 flex flex-wrap items-center gap-4 text-xs text-[--color-text-muted]">
-            <span>{facts.length} verified claim{facts.length !== 1 ? 's' : ''}</span>
-            {approverName && <span>Approved by {approverName}</span>}
+          <div className="flex flex-wrap items-center gap-3">
+            <span
+              className="inline-flex items-center rounded-full px-3 py-1 text-xs font-bold"
+              style={{ background: '#EEF2FF', color: 'var(--color-brand-600)' }}
+            >
+              {facts.length} verified claim{facts.length !== 1 ? 's' : ''}
+            </span>
+            {approverName && (
+              <span
+                className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold"
+                style={{ background: '#f7f9fb', color: 'var(--color-text-muted)' }}
+              >
+                <BadgeCheck size={12} /> Approved by {approverName}
+              </span>
+            )}
           </div>
         </div>
       </header>
 
       {/* Fact table */}
-      <section className="container py-10 max-w-5xl">
-        {facts.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-[--color-border] px-6 py-12 text-center text-sm text-[--color-text-muted]">
-            No claims published yet.
-          </div>
-        ) : (
-          <div className="overflow-x-auto rounded-xl border border-[--color-border]">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-[--color-border] bg-[--color-bg-subtle]">
-                  <th className="text-left px-5 py-3 font-semibold text-[--color-text-muted] w-1/4">Claim</th>
-                  <th className="text-left px-5 py-3 font-semibold text-[--color-brand-700] w-1/4">Collaboration.AI</th>
-                  <th className="text-left px-5 py-3 font-semibold text-[--color-text-muted] w-1/4">{c.name}</th>
-                  <th className="text-left px-5 py-3 font-semibold text-[--color-text-muted] w-1/4">Source</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[--color-border]">
-                {facts.map((fact, i) => (
-                  <tr key={i} className="align-top hover:bg-[--color-bg-subtle] transition-colors">
-                    <td className="px-5 py-4 font-medium text-[--color-text]">{fact.claim ?? '—'}</td>
-                    <td className="px-5 py-4 text-[--color-text]">{fact.ours ?? '—'}</td>
-                    <td className="px-5 py-4 text-[--color-text-muted]">{fact.theirs ?? '—'}</td>
-                    <td className="px-5 py-4">
-                      {fact.source ? (
-                        <a href={fact.source} target="_blank" rel="noopener noreferrer"
-                          className="text-[--color-brand-600] hover:underline break-all">
-                          Source
-                        </a>
-                      ) : (
-                        <span className="text-[--color-text-muted]">—</span>
-                      )}
-                      {fact.date && (
-                        <span className="block text-xs text-[--color-neutral-400] mt-0.5">
-                          {formatDate(fact.date)}
-                        </span>
-                      )}
-                    </td>
+      <section>
+        <div className="container py-12 max-w-5xl">
+          {facts.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-[--color-border] px-6 py-12 text-center text-sm text-[--color-text-muted]">
+              No claims published yet.
+            </div>
+          ) : (
+            <div className="overflow-x-auto rounded-2xl border border-[--color-border] bg-white">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-[--color-border]" style={{ background: '#f7f9fb' }}>
+                    <th className="text-left px-5 py-4 font-semibold text-[--color-text-muted] w-1/4">
+                      Claim
+                    </th>
+                    <th className="text-left px-5 py-4 font-bold w-1/4" style={{ color: 'var(--color-brand-700)' }}>
+                      Collaboration.AI
+                    </th>
+                    <th className="text-left px-5 py-4 font-semibold text-[--color-text-muted] w-1/4">
+                      {c.name}
+                    </th>
+                    <th className="text-left px-5 py-4 font-semibold text-[--color-text-muted] w-1/4">
+                      Source
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                </thead>
+                <tbody className="divide-y divide-[--color-border]">
+                  {facts.map((fact, i) => (
+                    <tr key={i} className="align-top hover:bg-[#f7f9fb] transition-colors">
+                      <td className="px-5 py-4 font-medium text-[--color-text]">{fact.claim ?? '—'}</td>
+                      <td className="px-5 py-4 text-[--color-text] font-medium">{fact.ours ?? '—'}</td>
+                      <td className="px-5 py-4 text-[--color-text-muted]">{fact.theirs ?? '—'}</td>
+                      <td className="px-5 py-4">
+                        {fact.source ? (
+                          <a
+                            href={fact.source}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[--color-brand-600] hover:underline text-xs"
+                          >
+                            Source <ExternalLink size={10} className="inline ml-0.5" />
+                          </a>
+                        ) : (
+                          <span className="text-[--color-text-muted]">—</span>
+                        )}
+                        {fact.date && (
+                          <span className="block text-xs text-[--color-neutral-400] mt-0.5">
+                            {formatDate(fact.date)}
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
 
-        {c.verdict && (
-          <div className="mt-8 rounded-xl border border-[--color-brand-300] bg-[--color-brand-50] p-6">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-[--color-brand-700] mb-2">Our take</h2>
-            <p className="text-[--color-text] leading-relaxed">{c.verdict}</p>
-          </div>
-        )}
+          {c.verdict && (
+            <div className="mt-8 card" style={{ borderLeftWidth: 4, borderLeftColor: 'var(--color-brand-500)' }}>
+              <p className="text-xs font-bold uppercase tracking-widest text-[--color-brand-600] mb-2">
+                Our take
+              </p>
+              <p className="text-[--color-text] leading-relaxed">{c.verdict}</p>
+            </div>
+          )}
+        </div>
       </section>
 
-      {/* Back + CTA */}
-      <section className="border-t border-[--color-border]">
-        <div className="container py-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-          <Link href="/resources/compare" className="text-sm font-medium text-[--color-brand-600] hover:underline">
-            ← Back to comparison map
-          </Link>
-          <Link href="/contact"
-            className="rounded-lg bg-[--color-brand-600] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[--color-brand-700] transition-colors">
-            Talk to us
-          </Link>
+      {/* Footer */}
+      <section className="border-t border-[--color-border]" style={{ background: 'rgba(238,242,255,0.60)' }}>
+        <div className="container py-12 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+          <div>
+            <p className="font-bold mb-1">Want to see how we stack up?</p>
+            <p className="text-sm text-[--color-text-muted]">
+              Talk to us and we&apos;ll walk you through a live comparison.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Link href="/resources/compare" className="btn btn-outline btn-sm">
+              <ArrowLeft size={14} /> All comparisons
+            </Link>
+            <Link href="/contact" className="btn btn-primary btn-sm">Talk to us</Link>
+          </div>
         </div>
       </section>
     </>

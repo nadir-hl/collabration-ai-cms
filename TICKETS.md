@@ -44,8 +44,8 @@ Updated as work progresses. Statuses: `✅ done` · `🔄 in-progress` · `⏳ p
 | P1-DS3 | Navigation component — desktop + mobile + product dropdown | ✅ | `src/components/Nav.tsx` |
 | P1-DS4 | Footer component | ✅ | `src/components/Footer.tsx` |
 | P1-DS5 | RichText renderer (Lexical → JSX) | ✅ | `src/components/RichText.tsx` |
-| P1-DS6 | Button component (primary / secondary / ghost variants) | ⏳ | Currently inline Tailwind; extract to component |
-| P1-DS7 | Card component | ⏳ | Currently inline; extract for reuse |
+| P1-DS6 | Button component (primary / secondary / ghost variants) | ✅ | `src/components/Button.tsx` — primary / secondary / ghost / sizes; renders as `<Link>` when `href` passed |
+| P1-DS7 | Card component | ✅ | `src/components/Card.tsx` — default / subtle variants, optional hover state |
 | P1-DS8 | Social card image template (OG images) | ⏳ | Needed before launch |
 | P1-DS9 | Product art direction — visual differentiation per product | ⏳ | Needs design input from client |
 | P1-DS10 | Case study cover image template | ⏳ | |
@@ -65,12 +65,12 @@ Updated as work progresses. Statuses: `✅ done` · `🔄 in-progress` · `⏳ p
 | P1-P7 | Cross-product section on every product page | ✅ | "Also in the platform" links built in |
 | P1-P8 | About page | ✅ | `/about` — pulls team from Payload People collection |
 | P1-P9 | Team section | ✅ | Part of `/about` — grid auto-populates from People |
-| P1-P10 | Careers page | ⏳ | `/careers` — list open roles from People (`isOpenRole: true`); placeholder if none |
+| P1-P10 | Careers page | ✅ | `/careers` — live roles grid from People collection; empty-state placeholder with contact CTA |
 | P1-P11 | Contact page | 🔄 | `/contact` — page exists; HubSpot form embed not yet wired |
 | P1-P12 | HubSpot form embedded with attribution intact | ⏳ | Need client HubSpot portal ID + form ID |
 | P1-P13 | Lead copy stored in Payload on form submit | ⏳ | Needs Payload API route wired to HubSpot webhook |
-| P1-P14 | Privacy page | ⏳ | `/privacy` — carry over existing text unchanged |
-| P1-P15 | Terms page | ⏳ | `/terms` — carry over existing text unchanged |
+| P1-P14 | Privacy page | ✅ | `/privacy` — page built with existing text |
+| P1-P15 | Terms page | ✅ | `/terms` — page built with existing text |
 
 ---
 
@@ -127,7 +127,7 @@ Updated as work progresses. Statuses: `✅ done` · `🔄 in-progress` · `⏳ p
 | ID | Ticket | Status | Notes |
 |----|--------|--------|-------|
 | P2-A1 | User roles defined: admin, approver, reviewer, editor | ✅ | `src/collections/Users.ts` |
-| P2-A2 | Per-collection access control functions | 🔄 | Claim gate on Competitors done; full role enforcement per collection not yet built |
+| P2-A2 | Per-collection access control functions | ✅ | Role guards on all editorial collections (Posts, CaseStudies, Competitors, Products); publish gate hooks; AuditLog, Media, People, Redirects, PageMeta all scoped |
 | P2-A3 | Draft → preview → publish → unpublish → rollback | ✅ | Payload versions with drafts enabled on Posts, CaseStudies, Competitors |
 | P2-A4 | Version history readable in admin | ✅ | Built into Payload |
 | P2-A5 | Media library (upload, reuse without touching code) | ✅ | Media collection with image resizing |
@@ -141,8 +141,8 @@ Updated as work progresses. Statuses: `✅ done` · `🔄 in-progress` · `⏳ p
 |----|--------|--------|-------|
 | P2-R1 | Assign a reviewer to a document | ⏳ | Needs a `reviewer` relationship field + notification hook |
 | P2-R2 | Notify reviewer when assigned | ⏳ | Email notification via Payload hooks |
-| P2-R3 | Review state visible on every document (pending / approved / rejected) | ⏳ | Add `reviewStatus` field to relevant collections |
-| P2-R4 | Named approver recorded on every published page | 🔄 | `approver` field exists on CaseStudies and Competitors; not on Posts or Products yet |
+| P2-R3 | Review state visible on every document (pending / approved / rejected) | ✅ | `reviewStatus` select field on Posts, CaseStudies, Competitors, Products — sidebar, role-gated |
+| P2-R4 | Named approver recorded on every published page | ✅ | `approver` (→ People) + `reviewer` (→ Users) fields on all four editorial collections |
 | P2-R5 | Claim gate: competitor claim cannot publish without named approver | ✅ | `beforeChange` hook in `src/collections/Competitors.ts` |
 | P2-R6 | Audit log: who changed what and when | ⏳ | Payload has version history but not a human-readable audit log; needs custom view or plugin |
 
@@ -221,19 +221,19 @@ Updated as work progresses. Statuses: `✅ done` · `🔄 in-progress` · `⏳ p
 | Phase | Total | ✅ Done | 🔄 In progress | ⏳ Pending |
 |-------|-------|---------|----------------|-----------|
 | Phase 1 — Setup | 11 | 5 | 0 | 6 |
-| Phase 1 — Design system | 10 | 5 | 0 | 5 |
-| Phase 1 — Pages | 15 | 5 | 6 | 4 |
+| Phase 1 — Design system | 10 | 7 | 0 | 3 |
+| Phase 1 — Pages | 15 | 9 | 2 | 4 |
 | Phase 1 — Resources | 7 | 7 | 0 | 0 |
 | Phase 1 — Migration | 10 | 1 | 0 | 9 |
 | Phase 1 — QA & launch | 8 | 2 | 0 | 6 |
-| Phase 2 — Admin | 6 | 4 | 1 | 1 |
-| Phase 2 — Review & approval | 6 | 1 | 1 | 4 |
+| Phase 2 — Admin | 6 | 5 | 0 | 1 |
+| Phase 2 — Review & approval | 6 | 3 | 0 | 3 |
 | Phase 2 — Intake & agents | 7 | 2 | 0 | 5 |
 | Phase 2 — Launch | 3 | 0 | 0 | 3 |
 | Phase 3 — SEO | 8 | 0 | 0 | 8 |
 | Ongoing support | 3 | 0 | 0 | 3 |
-| **Total** | **94** | **32** | **8** | **54** |
+| **Total** | **94** | **41** | **2** | **51** |
 
 ---
 
-_Last updated: 2026-08-16_
+_Last updated: 2026-08-17_

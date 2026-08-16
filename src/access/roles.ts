@@ -20,3 +20,12 @@ export const publishedOrAuthenticated = ({ req }: AccessArgs): boolean | Where =
   if (req.user) return true
   return { _status: { equals: 'published' } }
 }
+
+// Update access: admins/approvers/reviewers can edit anything; editors only edit their own docs
+export const editorOwnsOrAdmin = ({ req }: AccessArgs): boolean | Where => {
+  if (!req.user) return false
+  const role = getRole(req)
+  if (role && ['admin', 'approver', 'reviewer'].includes(role)) return true
+  if (role === 'editor') return { createdBy: { equals: req.user.id } }
+  return false
+}

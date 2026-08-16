@@ -7,7 +7,7 @@ export const People: CollectionConfig = {
     useAsTitle: 'name',
     defaultColumns: ['name', 'role', 'showOnTeamPage', 'isOpenRole'],
     // Only admin and approver manage the team and open roles
-    hidden: ({ user }) => !['admin', 'approver'].includes((user as any)?.role),
+    hidden: ({ user }) => !['admin', 'approver'].includes((user as { role?: string } | null)?.role),
   },
   access: {
     read: () => true, // public — used for author display on posts and team page

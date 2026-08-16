@@ -22,13 +22,34 @@ const resources = [
 
 export function Footer() {
   return (
-    <footer className="border-t border-[--color-border] bg-[--color-bg-subtle]">
+    <footer
+      className="border-t border-[--color-border]"
+      style={{
+        background: 'rgba(240,245,255,0.55)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+      }}
+    >
       <div className="container py-12 md:py-16">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
-            <Link href="/" className="text-lg font-semibold text-[--color-brand-700] tracking-tight">
-              Collaboration<span className="text-[--color-brand-500]">.AI</span>
+            <Link href="/" className="flex items-center gap-2" aria-label="Collaboration.AI home">
+              <svg
+                width="28" height="22"
+                viewBox="2 8 38 26"
+                fill="none"
+                aria-hidden="true"
+                className="shrink-0"
+              >
+                <circle cx="15" cy="21" r="11" fill="#0D0D12"/>
+                <circle cx="29" cy="21" r="11" fill="#2563EB"/>
+                <clipPath id="footer-venn"><circle cx="15" cy="21" r="11"/></clipPath>
+                <circle cx="29" cy="21" r="11" fill="#fff" clipPath="url(#footer-venn)" opacity="0.22"/>
+              </svg>
+              <span className="text-base font-bold text-[--color-text] tracking-[-0.2px]">
+                Collaboration<span className="text-[--color-brand-500]">.AI</span>
+              </span>
             </Link>
             <p className="mt-3 text-sm text-[--color-text-muted] leading-relaxed max-w-xs">
               AI-powered tools for the full revenue cycle.

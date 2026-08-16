@@ -7,7 +7,7 @@ export const PageMeta: CollectionConfig = {
     useAsTitle: 'path',
     defaultColumns: ['path', 'title', 'robots', 'updatedAt'],
     description: 'SEO overrides for static pages (home, about, contact, etc.). Content-collection pages handle their own metadata.',
-    hidden: ({ user }) => !['admin', 'approver'].includes((user as any)?.role),
+    hidden: ({ user }) => !['admin', 'approver'].includes((user as { role?: string } | null)?.role),
   },
   access: {
     read: () => true,

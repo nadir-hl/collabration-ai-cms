@@ -7,15 +7,15 @@ export const Users: CollectionConfig = {
     useAsTitle: 'email',
     defaultColumns: ['email', 'name', 'role'],
     // Only admins see the Users collection in the sidebar
-    hidden: ({ user }) => (user as any)?.role !== 'admin',
+    hidden: ({ user }) => (user as { role?: string } | null)?.role !== 'admin',
   },
   access: {
     // All authenticated users can read user documents (needed for relationship fields)
     read: ({ req }) => Boolean(req.user),
     // Only admin can create, update, or delete user accounts
-    create: ({ req }) => (req.user as any)?.role === 'admin',
-    update: ({ req }) => (req.user as any)?.role === 'admin',
-    delete: ({ req }) => (req.user as any)?.role === 'admin',
+    create: ({ req }) => (req.user as { role?: string } | null)?.role === 'admin',
+    update: ({ req }) => (req.user as { role?: string } | null)?.role === 'admin',
+    delete: ({ req }) => (req.user as { role?: string } | null)?.role === 'admin',
   },
   fields: [
     {
@@ -36,7 +36,7 @@ export const Users: CollectionConfig = {
       admin: {
         position: 'sidebar',
         // Non-admins cannot see or change the role field
-        condition: (_, __, { user }) => (user as any)?.role === 'admin',
+        condition: (_, __, { user }) => (user as { role?: string } | null)?.role === 'admin',
       },
     },
   ],

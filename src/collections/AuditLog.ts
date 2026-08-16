@@ -6,7 +6,7 @@ export const AuditLog: CollectionConfig = {
   admin: {
     useAsTitle: 'summary',
     defaultColumns: ['summary', 'action', 'collection', 'user', 'createdAt'],
-    hidden: ({ user }) => !['admin', 'approver', 'reviewer'].includes((user as any)?.role),
+    hidden: ({ user }) => !['admin', 'approver', 'reviewer'].includes((user as { role?: string } | null)?.role),
   },
   access: {
     read: isAdminApproverOrReviewer,

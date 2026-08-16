@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { ArrowRight } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Products',
@@ -13,7 +14,7 @@ const products = [
     tagline: 'Find the right people, faster',
     description:
       'AI-assisted prospecting that surfaces the contacts most likely to convert, before your competitors reach them. Pulls from public and partner data, scores fit against your ICP, and drafts the first outreach.',
-    icon: '◎',
+    accent: 'from-sky-400 to-blue-600',
   },
   {
     name: 'Decide',
@@ -21,7 +22,7 @@ const products = [
     tagline: 'Structured decisions at scale',
     description:
       'Move deals through the funnel with structured qualification, AI scoring, and built-in approval gates. Every stage has a criteria set. Nothing advances without meeting it.',
-    icon: '◈',
+    accent: 'from-blue-500 to-indigo-600',
   },
   {
     name: 'Acquire',
@@ -29,7 +30,7 @@ const products = [
     tagline: 'Turn pipeline into revenue',
     description:
       'Close faster with AI-drafted proposals, objection handling based on your real win/loss data, and real-time competitive intelligence surfaced at the moment you need it.',
-    icon: '◆',
+    accent: 'from-indigo-500 to-violet-600',
   },
   {
     name: 'Intelligence',
@@ -37,46 +38,57 @@ const products = [
     tagline: 'Know what your market is doing',
     description:
       "Track competitors, surface signals, and keep your team aligned on what's changing and why it matters. Competitor pages built from structured facts, not prose.",
-    icon: '◉',
+    accent: 'from-violet-500 to-purple-600',
   },
 ]
 
 export default function ProductsPage() {
   return (
     <>
-      <section className="border-b border-[--color-border]">
-        <div className="container py-16 md:py-20">
-          <p className="text-sm font-semibold uppercase tracking-widest text-[--color-brand-500] mb-3">Platform</p>
-          <h1 className="text-3xl md:text-4xl font-bold text-[--color-brand-900] max-w-2xl">
-            Four products. One platform. Every stage covered.
+      {/* Hero */}
+      <section className="bg-glow-hero border-b border-[--color-border]">
+        <div className="container py-20 md:py-24">
+          <div className="section-label mb-6">Platform</div>
+          <h1 className="display-lg max-w-3xl mb-5">
+            Four products. One platform. <span className="text-gradient">Every stage covered.</span>
           </h1>
-          <p className="mt-4 text-[--color-text-muted] max-w-xl leading-relaxed">
+          <p className="text-body-lg text-[--color-text-muted] max-w-xl">
             Each product solves a distinct part of the revenue cycle. Use one, or connect them all
             — the more you connect, the smarter each one gets.
           </p>
         </div>
       </section>
 
-      <section className="bg-[--color-bg-subtle]">
-        <div className="container py-12">
-          <div className="flex flex-col gap-4">
+      {/* Products */}
+      <section className="border-b border-[--color-border]">
+        <div className="container py-14">
+          <div className="grid gap-5 sm:grid-cols-2">
             {products.map((p, i) => (
               <Link
                 key={p.slug}
                 href={`/products/${p.slug}`}
-                className="group flex items-start gap-6 rounded-xl border border-[--color-border] bg-white p-6 md:p-8 hover:border-[--color-brand-400] hover:shadow-[--shadow-card] transition-all"
+                className="group card card-hover flex flex-col overflow-hidden"
+                style={{ padding: 0 }}
               >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[--color-brand-50] text-[--color-brand-600] text-xl font-bold">
-                  {i + 1}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-baseline gap-3 mb-2">
-                    <h2 className="text-xl font-bold text-[--color-text]">{p.name}</h2>
-                    <span className="text-sm text-[--color-text-muted]">{p.tagline}</span>
+                <div className={`h-2 bg-gradient-to-r ${p.accent}`} />
+                <div className="p-8 flex-1 flex flex-col">
+                  <div className="flex items-start gap-5 mb-5">
+                    <div
+                      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-xl font-bold"
+                      style={{ background: '#EEF2FF', color: 'var(--color-brand-600)' }}
+                    >
+                      {i + 1}
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-[--color-text] mb-0.5">{p.name}</h2>
+                      <p className="text-sm font-medium text-[--color-brand-500]">{p.tagline}</p>
+                    </div>
                   </div>
-                  <p className="text-sm text-[--color-text-muted] leading-relaxed max-w-2xl">{p.description}</p>
-                  <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-[--color-brand-600] group-hover:gap-2 transition-all">
-                    See {p.name} →
+                  <p className="text-sm text-[--color-text-muted] leading-relaxed flex-1">
+                    {p.description}
+                  </p>
+                  <span className="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-[--color-brand-600] group-hover:gap-2 transition-all duration-150">
+                    See {p.name} <ArrowRight size={14} aria-hidden />
                   </span>
                 </div>
               </Link>
@@ -85,24 +97,28 @@ export default function ProductsPage() {
         </div>
       </section>
 
-      {/* Cross-product section */}
-      <section className="border-t border-[--color-border]">
-        <div className="container py-14 md:py-16">
-          <div className="max-w-2xl">
-            <h2 className="text-2xl font-bold text-[--color-brand-900] mb-3">
-              Better together
+      {/* Better together */}
+      <section className="border-t border-[--color-border]" style={{ background: 'rgba(238,242,255,0.60)' }}>
+        <div className="container py-16 md:py-20">
+          <div className="max-w-3xl">
+            <div className="section-label mb-6">Better together</div>
+            <h2 className="text-3xl md:text-4xl font-bold mb-5 leading-tight">
+              One platform. Every signal shared.
             </h2>
-            <p className="text-[--color-text-muted] leading-relaxed">
-              Source feeds Decide with qualified contacts. Decide feeds Acquire with scored opportunities.
-              Intelligence keeps all three calibrated against what's actually happening in the market.
-              Each product shares the same fact layer, so your team works from one version of the truth.
+            <p className="text-base leading-relaxed mb-8 text-[--color-text-muted]">
+              Source feeds Decide with qualified contacts. Decide feeds Acquire with scored
+              opportunities. Intelligence keeps all three calibrated against what&apos;s actually
+              happening in the market. Each product shares the same fact layer, so your team
+              works from one version of the truth.
             </p>
-            <Link
-              href="/contact"
-              className="mt-6 inline-block rounded-lg bg-[--color-brand-600] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[--color-brand-700] transition-colors"
-            >
-              Talk to us about the full platform
-            </Link>
+            <div className="flex flex-wrap gap-3">
+              <Link href="/contact" className="btn btn-primary btn-lg">
+                Talk to us about the full platform
+              </Link>
+              <Link href="/get-started" className="btn btn-outline btn-lg">
+                Try for free <ArrowRight size={16} />
+              </Link>
+            </div>
           </div>
         </div>
       </section>
