@@ -1,10 +1,19 @@
 import type { CollectionConfig } from 'payload'
+import { isAdmin, isAdminOrApprover } from '../access/roles'
 
 export const Redirects: CollectionConfig = {
   slug: 'redirects',
   admin: {
     useAsTitle: 'from',
     defaultColumns: ['from', 'to', 'statusCode', 'retired'],
+    // Redirect management is an admin/approver concern
+    hidden: ({ user }) => !['admin', 'approver'].includes((user as any)?.role),
+  },
+  access: {
+    read: isAdminOrApprover,
+    create: isAdminOrApprover,
+    update: isAdminOrApprover,
+    delete: isAdmin,
   },
   fields: [
     {

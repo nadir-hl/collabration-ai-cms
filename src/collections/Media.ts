@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { isAdmin, isAdminOrApprover, isAuthenticated } from '../access/roles'
 
 export const Media: CollectionConfig = {
   slug: 'media',
@@ -11,6 +12,12 @@ export const Media: CollectionConfig = {
     ],
     adminThumbnail: 'thumbnail',
     mimeTypes: ['image/*'],
+  },
+  access: {
+    read: () => true, // images must be publicly accessible
+    create: isAuthenticated,
+    update: isAdminOrApprover,
+    delete: isAdmin,
   },
   fields: [
     {

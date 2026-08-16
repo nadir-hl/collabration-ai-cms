@@ -1,9 +1,18 @@
 import type { CollectionConfig } from 'payload'
+import { isAdmin, isAdminOrApprover } from '../access/roles'
 
 export const Products: CollectionConfig = {
   slug: 'products',
   admin: {
     useAsTitle: 'name',
+    // Editors don't need to edit core product pages
+    hidden: ({ user }) => !['admin', 'approver', 'reviewer'].includes((user as any)?.role),
+  },
+  access: {
+    read: () => true,
+    create: isAdminOrApprover,
+    update: isAdminOrApprover,
+    delete: isAdmin,
   },
   fields: [
     {

@@ -1,13 +1,33 @@
 import type { CollectionConfig } from 'payload'
+import { isAdmin, isAuthenticated, publishedOrAuthenticated } from '../access/roles'
+import { writeAuditLog } from '../hooks/writeAuditLog'
 
 export const CaseStudies: CollectionConfig = {
   slug: 'case-studies',
   admin: {
     useAsTitle: 'client',
-    defaultColumns: ['client', 'approver', 'status'],
+    defaultColumns: ['client', 'reviewStatus', 'approver', 'updatedAt'],
   },
   versions: {
     drafts: true,
+  },
+  access: {
+    read: publishedOrAuthenticated,
+    create: isAuthenticated,
+    update: isAuthenticated,
+    delete: isAdmin,
+  },
+  hooks: {
+    beforeChange: [
+      ({ data, req }) => {
+        const role = (req.user as any)?.role
+        if (data._status === 'published' && !['admin', 'approver'].includes(role ?? '')) {
+          throw new Error('Only approvers and admins can publish case studies.')
+        }
+        return data
+      },
+    ],
+    afterChange: [writeAuditLog('case-studies')],
   },
   fields: [
     {
@@ -47,11 +67,38 @@ export const CaseStudies: CollectionConfig = {
       ],
     },
     {
+      name: 'reviewStatus',
+      type: 'select',
+      defaultValue: 'pending',
+      options: [
+        { label: 'Pending Review', value: 'pending' },
+        { label: 'In Review', value: 'in-review' },
+        { label: 'Approved', value: 'approved' },
+        { label: 'Rejected', value: 'rejected' },
+      ],
+      admin: { position: 'sidebar' },
+      access: {
+        update: ({ req }) =>
+          ['admin', 'approver', 'reviewer'].includes((req.user as any)?.role ?? ''),
+      },
+    },
+    {
+      name: 'reviewer',
+      type: 'relationship',
+      relationTo: 'users',
+      admin: { position: 'sidebar' },
+      access: {
+        update: ({ req }) => ['admin', 'approver'].includes((req.user as any)?.role ?? ''),
+      },
+    },
+    {
       name: 'approver',
       type: 'relationship',
       relationTo: 'people',
-      required: true,
       admin: { position: 'sidebar' },
+      access: {
+        update: ({ req }) => ['admin', 'approver'].includes((req.user as any)?.role ?? ''),
+      },
     },
   ],
 }

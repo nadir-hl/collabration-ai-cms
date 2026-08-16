@@ -1,32 +1,37 @@
 import type { CollectionConfig } from 'payload'
+import { isAdmin, isAuthenticated, publishedOrAuthenticated } from '../access/roles'
+import { writeAuditLog } from '../hooks/writeAuditLog'
 
 export const Competitors: CollectionConfig = {
   slug: 'competitors',
   admin: {
     useAsTitle: 'name',
-    defaultColumns: ['name', 'approver', 'updatedAt'],
+    defaultColumns: ['name', 'reviewStatus', 'approver', 'updatedAt'],
   },
   versions: {
     drafts: true,
   },
   access: {
-    // Claims must never publish without a named approver
-    update: ({ req, data }) => {
-      if (!req.user) return false
-      return true
-    },
+    read: publishedOrAuthenticated,
+    create: isAuthenticated,
+    update: isAuthenticated,
+    delete: isAdmin,
   },
   hooks: {
     beforeChange: [
-      ({ data, operation }) => {
-        if (operation === 'update' && data._status === 'published') {
-          if (!data.approver) {
-            throw new Error('A named approver is required before publishing a competitor page.')
-          }
+      ({ data, req }) => {
+        const role = (req.user as any)?.role
+        if (data._status === 'published' && !['admin', 'approver'].includes(role ?? '')) {
+          throw new Error('Only approvers and admins can publish competitor pages.')
+        }
+        // Claim gate: cannot publish without a named approver
+        if (data._status === 'published' && !data.approver) {
+          throw new Error('A named approver is required before publishing a competitor page.')
         }
         return data
       },
     ],
+    afterChange: [writeAuditLog('competitors')],
   },
   fields: [
     {
@@ -62,10 +67,38 @@ export const Competitors: CollectionConfig = {
       type: 'textarea',
     },
     {
+      name: 'reviewStatus',
+      type: 'select',
+      defaultValue: 'pending',
+      options: [
+        { label: 'Pending Review', value: 'pending' },
+        { label: 'In Review', value: 'in-review' },
+        { label: 'Approved', value: 'approved' },
+        { label: 'Rejected', value: 'rejected' },
+      ],
+      admin: { position: 'sidebar' },
+      access: {
+        update: ({ req }) =>
+          ['admin', 'approver', 'reviewer'].includes((req.user as any)?.role ?? ''),
+      },
+    },
+    {
+      name: 'reviewer',
+      type: 'relationship',
+      relationTo: 'users',
+      admin: { position: 'sidebar' },
+      access: {
+        update: ({ req }) => ['admin', 'approver'].includes((req.user as any)?.role ?? ''),
+      },
+    },
+    {
       name: 'approver',
       type: 'relationship',
       relationTo: 'people',
       admin: { position: 'sidebar' },
+      access: {
+        update: ({ req }) => ['admin', 'approver'].includes((req.user as any)?.role ?? ''),
+      },
     },
   ],
 }
