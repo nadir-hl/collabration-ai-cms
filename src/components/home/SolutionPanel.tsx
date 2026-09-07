@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useRef, useState } from 'react'
+import { useRef } from 'react'
 import { usePinnedProgress } from './usePinnedProgress'
 import { CENTER_PL, CENTER_PR, SOLUTION_SCRUB_RUNWAY, TOP_ROW_H } from './constants'
 
@@ -14,6 +14,54 @@ const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3)
  * the rise reads as a quick beat relative to the whole pin, not a slow one.
  */
 const RISE_END = 0.2
+
+/* ─── Card row geometry ────────────────────────────────────────────────────── */
+
+const GAP_PX = 24
+
+/**
+ * DELIBERATE DEVIATION FROM FIGMA, at the client's direction.
+ *
+ * The vector (nodes 3:1901 / 3:1915) is a fixed 277.14 wide, but what the
+ * design is actually communicating is a *composition*: two whole cards plus
+ * the third cut in half at the rail. That composition is the requirement; the
+ * card width is just whatever satisfies it.
+ *
+ * So the width is derived from the measured mask rather than fixed:
+ *
+ *   2 cards + 2 gaps + half a card = mask
+ *   2.5W + 2(GAP) = maskW   ->   W = (maskW - 2·GAP) / 2.5
+ *
+ * A fixed width cannot hold this — it only looks right at whatever viewport it
+ * was tuned against. 300 is correct at a 1440 viewport (mask 795) but breaks
+ * at 1728 (mask 966), where three whole cards fit and Decide stops being cut
+ * at all. That is the bug this replaces.
+ *
+ * Clamped at both ends so the text measure stays sane: at the narrow end of
+ * `lg` the formula wants cards too narrow to read, and on a 4K display it
+ * wants ~870, which is a 100-character line. Inside the clamp the composition
+ * is exact; outside it degrades gracefully (a little more or less than half
+ * showing) rather than collapsing.
+ */
+/**
+ * Done in CSS rather than by measuring, so there is no JS in the sizing path
+ * at all. `cqi` is the mask's own inline size (it declares itself a container
+ * below), so the cards solve the equation against whatever width the mask
+ * actually has, with no ResizeObserver, no fallback width on first paint, and
+ * no re-render on resize.
+ *
+ * That also makes it observable in a backgrounded tab. A ResizeObserver never
+ * fires while `document.visibilityState === 'hidden'` (Chrome throttles the
+ * whole render loop, rAF included), which silently pinned the width to its
+ * fallback — layout, by contrast, is always computed.
+ *
+ *   card    = (100cqi - 2·GAP) / 2.5
+ *   strip   = 4·card + 3·GAP  = 1.6·(100cqi) - 4.8px
+ *   scrollable = strip - 100cqi = 60cqi - 4.8px
+ */
+const CARD_W_CSS = `calc((100cqi - ${2 * GAP_PX}px) / 2.5)`
+const STRIP_W_CSS = `calc(${4} * ${CARD_W_CSS} + ${3 * GAP_PX}px)`
+const MAX_SCROLL_CSS = `calc(60cqi - 4.8px)`
 
 /**
  * "The solution" — the four NetworkOS product cards.
@@ -46,19 +94,8 @@ export function SolutionPanel() {
   const pinRef = useRef<HTMLDivElement>(null)
   const p = usePinnedProgress(pinRef, SOLUTION_SCRUB_RUNWAY)
 
-  const maskRef = useRef<HTMLDivElement>(null)
-  const [maskW, setMaskW] = useState(0)
-  useEffect(() => {
-    const el = maskRef.current
-    if (!el) return
-    const ro = new ResizeObserver(([entry]) => setMaskW(entry.contentRect.width))
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [])
-
   const rise = 1 - easeOutCubic(clamp01(p / RISE_END))
   const scrub = clamp01((p - RISE_END) / (1 - RISE_END))
-  const maxScroll = Math.max(0, STRIP_W_PX - maskW)
 
   return (
     <>
@@ -80,16 +117,17 @@ export function SolutionPanel() {
             <Intro />
           </div>
 
-          <div ref={maskRef} className="mt-12 overflow-hidden">
+          {/* container-type makes cqi below resolve against this element */}
+          <div className="mt-12 overflow-hidden" style={{ containerType: 'inline-size' }}>
             <div
               className="flex gap-6"
               style={{
-                width: `${STRIP_W_PX}px`,
-                transform: `translateY(${(rise * 100).toFixed(1)}%) translateX(-${(scrub * maxScroll).toFixed(1)}px)`,
+                width: STRIP_W_CSS,
+                transform: `translateY(${(rise * 100).toFixed(1)}%) translateX(calc(-1 * ${scrub.toFixed(4)} * ${MAX_SCROLL_CSS}))`,
               }}
             >
               {PRODUCTS.map((product) => (
-                <ProductCard key={product.name} {...product} />
+                <ProductCard key={product.name} width={CARD_W_CSS} {...product} />
               ))}
             </div>
           </div>
@@ -123,7 +161,7 @@ function Intro() {
       <div className="mt-10 max-w-2xl">
         <p className="section-label">One system, end to end</p>
         <h2 className="display-md mt-2">Each step hands off to the next.</h2>
-        <p className="text-body mt-4 text-[--color-text-muted]">
+        <p className="text-body mt-4">
           Surface what the organization holds. Source what it&rsquo;s missing.
           Connect the two. Carry the result to award. Each step is written
           where the next one can use it.
@@ -132,12 +170,6 @@ function Intro() {
     </div>
   )
 }
-
-/* ─── Card row geometry ────────────────────────────────────────────────────── */
-
-/** Exact Figma value (nodes 3:1901 and 3:1915 both report this fixed size). */
-const CARD_W_PX = 277.14
-const GAP_PX = 24
 
 type Product = {
   name: string
@@ -172,7 +204,6 @@ const PRODUCTS: Product[] = [
   },
 ]
 
-const STRIP_W_PX = PRODUCTS.length * CARD_W_PX + (PRODUCTS.length - 1) * GAP_PX
 
 /**
  * Card shape — exact vector pulled from Figma (get_design_context +
@@ -181,16 +212,28 @@ const STRIP_W_PX = PRODUCTS.length * CARD_W_PX + (PRODUCTS.length - 1) * GAP_PX
  * .btn-primary's chamfer (10px, bottom-right) — a different shape entirely,
  * just the same idea.
  */
-function ProductCard({ name, href, description }: Product) {
+function ProductCard({
+  name,
+  href,
+  description,
+  width = '300px',
+}: Product & { width?: string }) {
   return (
     <Link
       href={href}
-      className="group flex shrink-0 flex-col rounded-tr-[2.06rem] bg-[#636363]/80 p-6 transition-colors hover:bg-[#636363]"
-      style={{ width: `${CARD_W_PX}px` }}
+      className="group flex shrink-0 flex-col rounded-tr-[2.06rem] bg-[#636363]/80 p-8 transition-colors hover:bg-[#636363]"
+      style={{ width }}
     >
       <p className="section-label">NetworkOS</p>
       <h3 className="mt-1 text-xl font-bold text-white">{name}</h3>
-      <p className="text-body mt-4 flex-1 text-[--color-text-muted]">{description}</p>
+      {/*
+        The card width is dictated by the 2.5-card composition, so on a very
+        wide display it can outgrow a comfortable line length. Capping the
+        measure here (rather than capping the card) keeps the composition
+        exact at every width while the text stays readable — ~62 characters
+        at a 2560 viewport, and it stops growing past this beyond that.
+      */}
+      <p className="text-body mt-4 max-w-[34rem] flex-1">{description}</p>
       <span className="btn btn-primary btn-md mt-6 w-full">Explore</span>
     </Link>
   )

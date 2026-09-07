@@ -3,6 +3,9 @@ import { ChallengePanel } from '@/components/home/ChallengePanel'
 import { WhoWeveHelped } from '@/components/home/WhoWeveHelped'
 import { ProblemPanel } from '@/components/home/ProblemPanel'
 import { SolutionPanel } from '@/components/home/SolutionPanel'
+import { ByTheNumbers } from '@/components/home/ByTheNumbers'
+import { NextSteps } from '@/components/home/NextSteps'
+import { SiteFooter } from '@/components/home/SiteFooter'
 import { SideRail } from '@/components/home/SideRail'
 import { BackgroundVideo } from '@/components/home/BackgroundVideo'
 import { SiteMenu } from '@/components/home/SiteMenu'
@@ -21,10 +24,9 @@ import { PANEL_W, RAIL_W, TOP_PAD } from '@/components/home/constants'
  * transform trickery is involved. The one-viewport spacer at the top of the
  * center column is what leaves the center showing bare video on landing.
  *
- * Scope: THE CHALLENGE, "Who we've helped", "Where it comes apart", and "The
- * solution" are built so far. The rest of the 3866px frame ("By the numbers",
- * NEXT STEPS, footer) still to come — they drop in below SolutionPanel as
- * siblings.
+ * Every section of the 3866px frame is now built. The one thing still
+ * outstanding is behavioural rather than visual: NextSteps has no submit
+ * destination — see that file for the HubSpot/Payload wiring it needs.
  */
 export default function HomePage() {
   return (
@@ -58,17 +60,9 @@ export default function HomePage() {
           <WhoWeveHelped />
           <ProblemPanel />
           <SolutionPanel />
-
-          {/*
-            TEMPORARY. Stands in for the sections that still have to be built
-            ("By the numbers", NEXT STEPS, footer).
-
-            Not decorative: without trailing content the diagram is the last
-            thing on the page, so it can never travel far enough up the viewport
-            to finish its convergence — progress tops out around 0.66 and the
-            circles never fill. Delete this once a real section follows.
-          */}
-          <div aria-hidden="true" className="h-screen" />
+          <ByTheNumbers />
+          <NextSteps />
+          <SiteFooter />
         </div>
 
         <SideRail />

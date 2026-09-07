@@ -110,12 +110,18 @@ function Intro() {
 
       <div className="text-body mt-6 space-y-0.5">
         <p className="text-white">A portal takes the submissions.</p>
-        <p className="text-[--color-text-muted]">A spreadsheet tracks them.</p>
-        <p className="text-[--color-text-muted]">A working group holds the relationships.</p>
-        <p className="text-[--color-text-muted]">Program files hold the history.</p>
+        <p className="text-[var(--color-text-muted)]">A spreadsheet tracks them.</p>
+        <p className="text-[var(--color-text-muted)]">A working group holds the relationships.</p>
+        <p className="text-[var(--color-text-muted)]">Program files hold the history.</p>
       </div>
 
-      <p className="text-body mt-6 text-[--color-text-muted]">
+      {/*
+        Deliberately NOT `.text-body` — that class is unlayered, so it outranks
+        Tailwind's `@layer utilities` colours and would force this back to white
+        (same trap SideRail documents). Size/weight/leading are set directly so
+        the muted colour survives.
+      */}
+      <p className="mt-6 text-sm font-medium leading-[25px] text-[var(--color-text-muted)]">
         Every piece has an owner and the program has none, so it gets reassembled
         at each step, and again at the start of every cycle.
       </p>
