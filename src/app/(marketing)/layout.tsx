@@ -1,13 +1,18 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Poppins, Geist_Mono } from 'next/font/google'
 import { draftMode } from 'next/headers'
-import { Footer } from '@/components/Footer'
-import { Nav } from '@/components/Nav'
 import { DraftBanner } from '@/components/DraftBanner'
 import React from 'react'
 import '../globals.css'
 
-const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
+// Poppins is not a variable font, so weights must be declared explicitly.
+// The design uses Medium (500) for body and SemiBold (600) for headings/labels.
+const poppins = Poppins({
+  variable: '--font-poppins',
+  subsets: ['latin'],
+  weight: ['500', '600', '700'],
+  display: 'swap',
+})
 const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] })
 
 export const metadata: Metadata = {
@@ -22,11 +27,9 @@ export const metadata: Metadata = {
 export default async function MarketingLayout({ children }: { children: React.ReactNode }) {
   const { isEnabled: isDraft } = await draftMode()
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full`}>
+    <html lang="en" className={`${poppins.variable} ${geistMono.variable} h-full`}>
       <body className="min-h-full flex flex-col antialiased">
-        <Nav />
         <main className="flex-1">{children}</main>
-        <Footer />
         {isDraft && <DraftBanner />}
       </body>
     </html>

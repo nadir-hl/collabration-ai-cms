@@ -5,48 +5,73 @@
 @custom-variant dark (&:is(.dark *));
 
 /* ─── Design Tokens ────────────────────────────────────────────────────────── */
+/*
+ * Source of truth: Figma "CAI" file, HOME frame (2:902).
+ * https://www.figma.com/design/eHoARd8PfbDv5akaaawZ7M/CAI?node-id=2-902
+ *
+ * NOTE ON SURFACE COLORS: the Figma file paints both surfaces as
+ * `black @ opacity .78, mix-blend-mode: multiply` stacked over a white canvas.
+ * Those composite to flat values, which is what we ship — we do NOT reproduce
+ * the blend stack in CSS:
+ *   page   = 255 * .22          -> #383838
+ *   panel  = 56.1 * .22         -> #0C0C0C
+ */
 @theme inline {
-  /* Brand palette — deep navy to electric blue */
-  --color-brand-950: #050814;
-  --color-brand-900: #0D0D12;
-  --color-brand-800: #111827;
-  --color-brand-700: #1d3557;
-  --color-brand-600: #1e40af;
-  --color-brand-500: #2563eb;
-  --color-brand-400: #3b82f6;
-  --color-brand-300: #93c5fd;
-  --color-brand-50:  #eff6ff;
+  /* Brand palette — CAI amber. #FFA820 is the one value taken verbatim
+     from Figma; the ramp around it is derived for hover/border/disabled use. */
+  --color-brand-950: #3d2500;
+  --color-brand-900: #6b4100;
+  --color-brand-800: #995d00;
+  --color-brand-700: #c77900;
+  --color-brand-600: #e69100;
+  --color-brand-500: #FFA820;  /* ← Figma source of truth */
+  --color-brand-400: #ffb84d;
+  --color-brand-300: #ffcc80;
+  --color-brand-50:  #fff4e0;
 
-  /* Accent */
-  --color-accent-600: #0891b2;
-  --color-accent-400: #22d3ee;
-  --color-accent-100: #cffafe;
+  /* Accent — alias of brand; the design uses a single accent hue */
+  --color-accent-600: #e69100;
+  --color-accent-400: #FFA820;
+  --color-accent-100: #fff4e0;
 
-  /* Neutral */
-  --color-neutral-950: #0D0D12;
-  --color-neutral-900: #1F1F1F;
-  --color-neutral-800: #2d2d2d;
-  --color-neutral-600: #52525b;
-  --color-neutral-400: #94a3b8;
-  --color-neutral-300: #cbd5e1;
-  --color-neutral-200: #e2e8f0;
-  --color-neutral-100: #f1f5f9;
-  --color-neutral-50:  #f8fafc;
+  /* Neutral — greyscale spanning panel black to rail white */
+  --color-neutral-950: #0C0C0C;  /* left panel  */
+  --color-neutral-900: #1a1a1a;
+  --color-neutral-800: #262626;
+  --color-neutral-700: #383838;  /* page / center panel */
+  --color-neutral-600: #525252;
+  --color-neutral-400: #a3a3a3;
+  --color-neutral-300: #d4d4d4;
+  --color-neutral-200: #e5e5e5;
+  --color-neutral-100: #f5f5f5;
+  --color-neutral-50:  #fafafa;
 
   /* Semantic surfaces */
-  --color-bg:           #ffffff;
-  --color-bg-subtle:    #F5F7FF;
-  --color-bg-hero:      #EEF2FF;
-  --color-bg-pill:      #ECF0F3;
-  --color-border:       var(--color-neutral-200);
-  --color-border-hover: var(--color-neutral-300);
-  --color-text:         var(--color-neutral-950);
-  --color-text-body:    var(--color-neutral-900);
-  --color-text-muted:   var(--color-neutral-600);
+  --color-bg:           var(--color-neutral-700);  /* #383838 */
+  --color-bg-panel:     var(--color-neutral-950);  /* #0C0C0C — left panel */
+  --color-bg-rail:      #ffffff;                   /* right vertical rail */
+  --color-bg-subtle:    var(--color-neutral-800);
+  --color-bg-hero:      var(--color-neutral-950);
+  --color-bg-pill:      rgba(255, 255, 255, 0.08);
+  --color-border:       rgba(255, 255, 255, 0.22);
+  --color-border-hover: rgba(255, 255, 255, 0.40);
+  --color-text:         #ffffff;
+  --color-text-body:    #ffffff;
+  --color-text-muted:   rgba(255, 255, 255, 0.68);
+  --color-text-on-accent: #000000;                 /* black label on amber */
 
-  /* Typography — matches Geist Sans feel closest to both references */
-  --font-sans: var(--font-geist-sans), "Inter", system-ui, -apple-system, sans-serif;
+  /* Layout — fixed canvas geometry from the HOME frame (1400px wide) */
+  --layout-canvas:  1400px;
+  --layout-panel:   478px;   /* left black panel */
+  --layout-rail:    64px;    /* right white rail */
+
+  /* Typography — Poppins (SemiBold 600 / Medium 500) per Figma */
+  --font-sans: var(--font-poppins), "Poppins", system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-geist-mono), "Fira Code", monospace;
+
+  /* Tracking — Figma letterSpacing 20 (=20%) on 14px == 2.8px */
+  --tracking-label: 0.2em;
+  --tracking-tight: -0.0119em;  /* -0.2734px on 23px */
 
   /* Radius */
   --radius-sm:   0.375rem;   /* 6px  — small tags */
@@ -103,34 +128,13 @@
 
 /* ─── Base ─────────────────────────────────────────────────────────────────── */
 body {
-  background-color: #f5f7ff;
-  background-image:
-    radial-gradient(ellipse 65% 55% at 10% 20%, rgba(99,102,241,0.20) 0%, transparent 65%),
-    radial-gradient(ellipse 50% 50% at 88% 80%, rgba(6,182,212,0.17) 0%, transparent 65%),
-    radial-gradient(ellipse 40% 45% at 70% 10%, rgba(139,92,246,0.14) 0%, transparent 60%),
-    radial-gradient(ellipse 55% 60% at 0% 90%, rgba(37,99,235,0.12) 0%, transparent 60%);
-  background-attachment: fixed;
+  background-color: var(--color-bg);
   color: var(--color-text-body);
   font-family: var(--font-sans);
-  font-size: 1rem;
-  line-height: 1.6;
+  font-size: 0.875rem;   /* 14px — the design's base body size */
+  line-height: 25px;     /* Figma: 14px Medium / 25px line-height */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-/* Global blurred-orb layer — fixed, sits behind all pages */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: -1;
-  background:
-    radial-gradient(circle 500px at 5% 12%, rgba(129,140,248,0.32) 0%, transparent 70%),
-    radial-gradient(circle 440px at 95% 88%, rgba(34,211,238,0.26) 0%, transparent 70%),
-    radial-gradient(circle 400px at 75% 5%, rgba(167,139,250,0.24) 0%, transparent 70%),
-    radial-gradient(circle 460px at 1% 92%, rgba(99,102,241,0.22) 0%, transparent 70%);
-  filter: blur(48px);
 }
 
 /* ─── Keyframes ────────────────────────────────────────────────────────────── */
@@ -140,54 +144,92 @@ body::before {
 }
 
 /* ─── Typography Scale ─────────────────────────────────────────────────────── */
+/*
+ * Figma HOME is a fixed 1400px canvas: the hero h1 is 23px, body 14px.
+ * Those are small for a modern viewport, so the display sizes below scale UP
+ * from the Figma value at wide widths rather than pinning to it exactly.
+ * The lower bound of each clamp() IS the Figma value.
+ */
+/*
+ * Held close to the Figma 23px. Scaling this up to 40px broke the landing
+ * composition: the headline wrapped to four lines instead of two and pushed the
+ * CTA below the fold. The left panel's vertical rhythm is built around 23px.
+ */
 .display-xl {
-  font-size: clamp(3rem, 6vw, 5rem);       /* 48–80px */
-  font-weight: 800;
-  line-height: 1.05;
-  letter-spacing: -0.03em;
+  font-size: clamp(1.4375rem, 1.31rem + 0.28vw, 1.625rem);  /* 23px → 26px */
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: var(--tracking-tight);
   color: var(--color-text);
 }
 
 .display-lg {
-  font-size: clamp(2.25rem, 4.5vw, 3.75rem); /* 36–60px */
-  font-weight: 800;
-  line-height: 1.1;
-  letter-spacing: -0.025em;
+  font-size: clamp(1.375rem, 1.15rem + 1.14vw, 2.125rem); /* 22px → 34px */
+  font-weight: 600;
+  line-height: 1.28;
+  letter-spacing: var(--tracking-tight);
   color: var(--color-text);
 }
 
 .display-md {
-  font-size: clamp(1.75rem, 3vw, 2.5rem);  /* 28–40px */
-  font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
+  font-size: clamp(1.25rem, 1.1rem + 0.75vw, 1.75rem);    /* 20px → 28px */
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: var(--tracking-tight);
   color: var(--color-text);
 }
 
+/*
+ * The "KNOWS / MISSING" display type. Figma draws these as outlined vectors
+ * (2:1049-2:1052) with a 50px cap height; Poppins caps are ~0.70em, so the
+ * equivalent live-text size is ~68px.
+ */
+.display-knows {
+  font-size: clamp(2.75rem, 1.5rem + 4vw, 4.25rem);  /* 44px → 68px */
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+
 .text-body-lg {
-  font-size: 1.125rem;
+  font-size: 1rem;
   line-height: 1.75;
+  font-weight: 500;
   color: var(--color-text-body);
 }
 
 .text-body {
-  font-size: 1rem;
-  line-height: 1.7;
+  font-size: 0.875rem;   /* 14px */
+  line-height: 25px;
+  font-weight: 500;
   color: var(--color-text-body);
 }
 
-/* ─── Section Label (Plasmic-style pill) ───────────────────────────────────── */
+/* ─── Section Label ────────────────────────────────────────────────────────── */
+/*
+ * The design's recurring eyebrow: amber, uppercase, 14px SemiBold, 2.8px tracking.
+ * ("SOFTWARE FOR PROGRAM OFFICES", "THE CHALLENGE", "WHAT WE DO", "NETWORKOS")
+ * Flat text — no pill, no background.
+ */
 .section-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  padding: 0.3125rem 0.875rem;
-  border-radius: var(--radius-full);
-  background: var(--color-bg-pill);
-  color: var(--color-text-muted);
-  font-size: 0.75rem;
+  display: inline-block;
+  color: var(--color-brand-500);
+  font-size: 0.875rem;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: var(--tracking-label);
+  line-height: normal;
+  text-transform: uppercase;
+}
+
+/* Same treatment, white — used for rules/labels on the dark center panel */
+.section-label-light {
+  display: inline-block;
+  color: var(--color-text);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: var(--tracking-label);
+  line-height: normal;
   text-transform: uppercase;
 }
 
@@ -230,43 +272,77 @@ body::before {
 .btn-lg  { padding: 0.8125rem 1.75rem; font-size: 1rem; }
 .btn-xl  { padding: 1rem 2.25rem;     font-size: 1.0625rem; }
 
-/* Primary — dark fill (Try for free / main CTA) */
+/*
+ * Primary — the CAI notched CTA ("TALK TO OUR TEAM").
+ *
+ * Rebuilt in CSS rather than shipped as the Figma SVG export, because a button
+ * needs hover/focus/active states and has to grow with its label — an <img>
+ * does neither. Geometry is taken verbatim from the exported asset (3:1935):
+ *   fill     #FFA820
+ *   box      368.52 x 53.04, top-RIGHT corner only, radius 10.35px
+ *   outline  1px white, offset +8px x/y, right + bottom edges only
+ */
 .btn-primary {
-  background: var(--color-brand-900);
-  color: #fff;
-  border-color: var(--color-brand-900);
-  box-shadow: var(--shadow-button);
-}
-.btn-primary:hover {
-  background: var(--color-neutral-800);
-  border-color: var(--color-neutral-800);
-  box-shadow: 0 4px 14px -2px rgb(0 0 0 / 0.22);
-  transform: translateY(-1px);
+  position: relative;
+  background: var(--color-brand-500);
+  color: var(--color-text-on-accent);
+  border-color: var(--color-brand-500);
+  border-radius: 0;
+  border-top-right-radius: 10.35px;
+  font-weight: 600;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
 }
 
-/* Secondary — Storyblok tinted style: light-blue bg + blue border + blue text */
+/* The offset white outline — right + bottom only, drawn 8px down/right. */
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  inset: 8px -8px -8px 8px;
+  border: 1px solid #fff;
+  border-left: 0;
+  border-top: 0;
+  border-top-right-radius: 10.35px;
+  pointer-events: none;
+  transition: inset var(--duration-base) var(--ease-out-expo);
+}
+
+.btn-primary:hover {
+  background: var(--color-brand-400);
+  border-color: var(--color-brand-400);
+}
+/* On hover the plate slides into its own outline. */
+.btn-primary:hover::after { inset: 4px -4px -4px 4px; }
+.btn-primary:active::after { inset: 0; }
+
+/* Secondary — outlined amber on dark */
 .btn-secondary {
-  background: #EEF2FF;
-  color: var(--color-brand-600);
-  border-color: #c7d7ff;
+  background: transparent;
+  color: var(--color-brand-500);
+  border-color: var(--color-brand-500);
+  border-radius: 0;
+  border-top-right-radius: 10.35px;
+  font-weight: 600;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
 }
 .btn-secondary:hover {
-  background: #e0e9ff;
-  border-color: #a5bdff;
-  transform: translateY(-1px);
+  background: var(--color-brand-500);
+  color: var(--color-text-on-accent);
 }
 
-/* Outline — minimal bordered, no fill (Contact Us / low-emphasis) */
+/* Outline — minimal bordered, no fill (low-emphasis) */
 .btn-outline {
   background: transparent;
   color: var(--color-text-muted);
   border-color: var(--color-border);
+  border-radius: 0;
+  border-top-right-radius: 10.35px;
 }
 .btn-outline:hover {
-  background: var(--color-neutral-50);
-  border-color: var(--color-neutral-300);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--color-border-hover);
   color: var(--color-text);
-  transform: translateY(-1px);
 }
 
 /* Ghost — no border */
@@ -282,11 +358,11 @@ body::before {
 
 /* ─── Cards ────────────────────────────────────────────────────────────────── */
 .card {
-  background: var(--color-bg);
+  background: var(--color-bg-subtle);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: 0;
   padding: 1.5rem;
-  box-shadow: var(--shadow-card);
+  box-shadow: none;
   transition:
     box-shadow var(--duration-base) var(--ease-out-expo),
     border-color var(--duration-base) var(--ease-out-expo),
@@ -319,9 +395,9 @@ body::before {
   background: transparent;
 }
 
-/* Alternating sections get a very subtle frosted-glass wash for visual rhythm */
+/* Alternating sections get a very subtle lift off the #383838 page ground */
 .bg-glow-sides {
-  background: rgba(240, 245, 255, 0.40);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 /* ─── Utilities ────────────────────────────────────────────────────────────── */
@@ -336,12 +412,22 @@ body::before {
   .container { padding-inline: 2rem; }
 }
 
-/* Gradient text (for hero accents) */
+/* Accent text (hero highlights). The design uses flat amber, not a gradient. */
 .text-gradient {
-  background: linear-gradient(135deg, var(--color-brand-500), var(--color-accent-400));
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--color-brand-500);
+  -webkit-text-fill-color: currentColor;
+}
+
+/*
+ * Hollow outlined display type — the "MISSING" treatment.
+ * Approximates the Figma vector letterforms with a live-text stroke.
+ * NOTE: Figma draws those glyph outlines with a DASHED stroke, which CSS
+ * cannot do on text. This renders a solid hairline instead. See TICKETS.md.
+ */
+.text-outline {
+  color: transparent;
+  -webkit-text-stroke: 1px var(--color-text);
+  paint-order: stroke fill;
 }
 
 /* ─── Rich Text (Lexical output) ───────────────────────────────────────────── */
