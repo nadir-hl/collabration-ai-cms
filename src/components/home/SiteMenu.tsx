@@ -2,18 +2,19 @@
 
 import Link from 'next/link'
 import { useCallback, useRef } from 'react'
-import { RAIL_W, TOP_PAD } from './constants'
+import { ASSISTANT_EASE, TOP_PAD } from './constants'
 
 /**
  * Menu trigger + overlay panel (Figma 8:6).
  *
- * The 860x532 node is a scaled-down mockup of the component, not the intended
- * viewport size — the actual design is a full-screen overlay covering the left
- * + center panels only, leaving the right rail (RAIL_W) visible and untouched.
- * So the dialog is left-anchored and full-height, width = 100% minus RAIL_W
- * (100% on mobile, where the rail is hidden). No ::backdrop dimming: the panel
- * itself is opaque and covers the entire interactive area except the rail,
- * which must never be dimmed.
+ * The 860x532 node matches the center column (855 of the 1400 canvas), so the
+ * menu covers the center column only: the left black panel and the right rail
+ * both stay visible and untouched. On lg the dialog runs from var(--panel) to
+ * var(--rail), full height — widths AssistantShell publishes, so the menu
+ * still fits the center column while the rail assistant is open. On mobile,
+ * where neither side element is shown, it is full-width. No ::backdrop dimming: the panel
+ * itself is opaque, and the left panel and rail behind the backdrop must never
+ * be dimmed.
  *
  * Built on the native <dialog> element with showModal(), which gives us focus
  * trapping, Escape-to-close, and inertness of the page behind for free — all
@@ -22,10 +23,13 @@ import { RAIL_W, TOP_PAD } from './constants'
  * Content geometry (unchanged from the mockup, scales via % padding): rule
  * above the columns at mt-[6.5rem] (matches TOP_PAD, the row height every
  * panel opens with), columns below that, wordmark + description below a
- * second rule, close button 29x29 near the top-right corner.
+ * second rule. The 29x29 close button sits on the shared top row (TOP_PAD),
+ * exactly where the trigger is, so it lines up with the slide arrows and the
+ * rail mark.
  *
  * The trigger is fixed to the viewport, offset from the right by the rail's
- * width plus the 26px gap Figma leaves between them.
+ * width (var(--rail), so it slides along when the assistant opens) plus the
+ * 26px gap Figma leaves between them.
  */
 
 const columns = [
@@ -77,8 +81,8 @@ export function SiteMenu() {
         type="button"
         aria-label="Open menu"
         onClick={() => ref.current?.showModal()}
-        className="fixed z-30 flex size-[29px] items-center justify-center rounded-md bg-black transition-colors hover:bg-neutral-800"
-        style={{ top: TOP_PAD, right: `calc(${RAIL_W} + 26px)` }}
+        className={`fixed z-30 flex size-[29px] items-center justify-center rounded-md bg-black transition-[right,background-color] hover:bg-neutral-800 ${ASSISTANT_EASE}`}
+        style={{ top: TOP_PAD, right: 'calc(var(--rail) + 26px)' }}
       >
         <span className="flex w-[17px] flex-col gap-[3px]" aria-hidden="true">
           <span className="h-[1.5px] w-full bg-white" />
@@ -91,18 +95,18 @@ export function SiteMenu() {
         ref={ref}
         onClick={onBackdrop}
         aria-label="Site menu"
-        // Left-anchored, full height, full width minus the rail (RAIL_W =
-        // 4rem — keep this literal in sync with constants.ts; Tailwind can't
-        // interpolate the JS value into an arbitrary-value class).
-        className="site-menu fixed inset-y-0 left-0 right-auto m-0 h-auto w-full max-w-none max-h-none overflow-y-auto bg-white p-0 text-black lg:w-[calc(100%-4rem)]"
+        // Center column only: from the left panel's edge to the rail's.
+        className="site-menu fixed inset-y-0 left-0 right-auto m-0 h-auto w-full max-w-none max-h-none overflow-y-auto bg-white p-0 text-black backdrop:bg-transparent lg:left-[var(--panel)] lg:w-[calc(100%_-_var(--panel)_-_var(--rail))]"
       >
         <div className="relative px-[12%] pb-14 pt-[6.6%]">
-          {/* Close — Figma 3:2130, 29x29 at (783, 35) */}
+          {/* Close — Figma 3:2130. Same spot as the trigger: the dialog ends
+              where the rail starts, so the trigger's RAIL_W + 26px is 26px here. */}
           <button
             type="button"
             onClick={close}
             aria-label="Close menu"
-            className="absolute right-[6.6%] top-[6.6%] flex size-[29px] items-center justify-center rounded-md bg-[var(--color-brand-500)] text-black transition-colors hover:bg-[var(--color-brand-400)]"
+            style={{ top: TOP_PAD, right: '26px' }}
+            className="absolute flex size-[29px] items-center justify-center rounded-md bg-[var(--color-brand-500)] text-black transition-colors hover:bg-[var(--color-brand-400)]"
           >
             <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
               <path

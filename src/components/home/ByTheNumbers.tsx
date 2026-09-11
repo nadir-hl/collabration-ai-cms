@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useElementProgress } from './useElementProgress'
 import { CENTER_PL, CENTER_PR } from './constants'
 
@@ -16,7 +16,8 @@ const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3)
  *
  * It animates because the file says to: the designer's note parked beside the
  * frame (3:2101) reads "These should animate in as we scroll". So the stats
- * stagger in and the two bars grow from their shared baseline.
+ * stagger in and the two bars grow from their shared baseline, and each
+ * figure counts up from zero as it appears (useCountUp).
  *
  * The second half of that note — "the need to be editable and change over
  * time" — is a CMS concern. These figures are hard-coded for now; they want to
@@ -85,7 +86,7 @@ export function ByTheNumbers() {
         </ul>
 
         {/* Figma 3:2050 — a hairline the full height of the two columns */}
-        <div aria-hidden="true" className="hidden bg-white/30 sm:block" />
+        <div aria-hidden="true" className="hidden bg-white sm:block" />
 
         <div className="mt-12 sm:mt-0">
           <p className="section-label">1 week vs 1 hour</p>
@@ -117,6 +118,13 @@ function Stat({
   // Each stat opens 0.08 after the one above it, over a 0.4-wide window.
   const t = easeOutCubic(clamp01((p - index * 0.08) / 0.4))
 
+  // Latch the count's start the first time this stat begins to appear, so
+  // scrolling back up mid-count doesn't stop it (React's "adjust state while
+  // rendering" pattern, rather than an effect).
+  const [started, setStarted] = useState(false)
+  if (t > 0 && !started) setStarted(true)
+  const shown = useCountUp(value, started)
+
   return (
     <li
       style={{
@@ -124,12 +132,70 @@ function Stat({
         transform: `translateY(${((1 - t) * 14).toFixed(1)}px)`,
       }}
     >
-      <p className="text-2xl font-bold leading-none text-[var(--color-brand-500)]">
-        {value}
+      <p className="text-2xl font-bold leading-none tabular-nums text-[var(--color-brand-500)]">
+        {/* The count is decoration; assistive tech gets the real figure. */}
+        <span aria-hidden="true">{shown}</span>
+        <span className="sr-only">{value}</span>
       </p>
       <p className="text-body mt-2">{label}</p>
     </li>
   )
+}
+
+/**
+ * Count-up length: long enough to read as counting, short enough that a
+ * reader scrolling at a normal pace sees each figure land.
+ */
+const COUNT_MS = 1600
+
+/**
+ * Splits a display figure into prefix / number / suffix ("$1.62B" -> "$",
+ * 1.62, "B"), keeping its decimals and thousands separators so every frame of
+ * the count is formatted like the final figure.
+ */
+function parseStat(value: string) {
+  const m = value.match(/^(\D*)(\d[\d,]*(?:\.\d+)?)(.*)$/)
+  if (!m) return null
+  const [, prefix, digits, suffix] = m
+  const decimals = digits.split('.')[1]?.length ?? 0
+  return {
+    prefix,
+    suffix,
+    target: Number(digits.replace(/,/g, '')),
+    format: new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+      useGrouping: digits.includes(','),
+    }),
+  }
+}
+
+/**
+ * Counts a figure up from zero once `start` turns true, eased to settle on
+ * the exact value. Time-based rather than tied to scroll progress like the
+ * rest of the section: a scrubbed count would park on figures like "4,213+"
+ * wherever the reader stops scrolling. Reduced motion jumps to the final value.
+ */
+function useCountUp(value: string, start: boolean) {
+  const stat = useMemo(() => parseStat(value), [value])
+  const [n, setN] = useState(0)
+
+  useEffect(() => {
+    if (!start || !stat) return
+    const duration = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      ? 0
+      : COUNT_MS
+    const t0 = performance.now()
+    let raf = requestAnimationFrame(function tick(now) {
+      const k = duration ? clamp01((now - t0) / duration) : 1
+      setN(stat.target * easeOutCubic(k))
+      if (k < 1) raf = requestAnimationFrame(tick)
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [start, stat])
+
+  if (!stat) return value
+  return `${stat.prefix}${stat.format.format(n)}${stat.suffix}`
 }
 
 /**

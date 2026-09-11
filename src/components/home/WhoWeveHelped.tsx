@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import { CENTER_PL, CENTER_PR, TOP_ROW_H } from './constants'
+import { PartnerDisclosure } from './PartnerDisclosure'
 
 /**
  * "Who we've helped" — Figma HOME (2:902), y=883..1054.
@@ -18,46 +19,30 @@ import { CENTER_PL, CENTER_PR, TOP_ROW_H } from './constants'
  *
  * The logos are optically centred on a shared line (centres ~984.5, 986.4,
  * 983.5) rather than aligned on their tops or bottoms, so the row centres them.
+ *
+ * The "+" under each partner expands a short summary below it
+ * (PartnerDisclosure). The summaries are placeholder copy for now.
  */
 
 type Partner = {
   name: string
   href?: string
+  /** Revealed by the "+". Placeholder copy — replace with approved text. */
+  summary: string
   render: () => React.ReactNode
 }
 
 const partners: Partner[] = [
   {
     name: 'AFWERX Challenge',
-    render: () => (
-      // bbox 148.54 x 27.45
-      <span className="relative block h-[27.45px] w-[148.54px]">
-        <Image
-          src="/brand/logos/afwerx-mark.svg"
-          alt=""
-          width={27}
-          height={27}
-          className="absolute left-0 top-0 h-[27.07px] w-[26.81px]"
-        />
-        <Image
-          src="/brand/logos/afwerx-word.svg"
-          alt=""
-          width={49}
-          height={6}
-          className="absolute left-[35.28px] top-[3.87px] h-[6.24px] w-[48.67px]"
-        />
-        <Image
-          src="/brand/logos/afwerx-challenge.svg"
-          alt=""
-          width={113}
-          height={13}
-          className="absolute left-[35.28px] top-[14.69px] h-[12.5px] w-[113.3px]"
-        />
-      </span>
-    ),
+    summary:
+      'Placeholder summary for AFWERX Challenge: the program we supported, the problem it was facing, and what Collaboration.Ai delivered. Replace with approved copy.',
+    render: () => <AfwerxChallengeLogo />,
   },
   {
     name: 'U.S. Department of War',
+    summary:
+      'Placeholder summary for the U.S. Department of War: the program we supported, the problem it was facing, and what Collaboration.Ai delivered. Replace with approved copy.',
     render: () => (
       // bbox 195.3 x 35.4
       <span className="relative block h-[35.4px] w-[195.3px]">
@@ -80,6 +65,8 @@ const partners: Partner[] = [
   },
   {
     name: 'SpaceWERX',
+    summary:
+      'Placeholder summary for SpaceWERX: the program we supported, the problem it was facing, and what Collaboration.Ai delivered. Replace with approved copy.',
     render: () => (
       <Image
         src="/brand/logos/spacewerx.svg"
@@ -126,25 +113,43 @@ export function WhoWeveHelped() {
 
             <hr className="mt-4 w-full border-0 border-t border-white" />
 
-            {/*
-              Figma 2:1203 / 2:1201 / 2:1199 — a 16.4px circled "+".
-              The design implies each partner expands to reveal more, but that
-              content and behaviour are not specified yet, so this is inert.
-            */}
-            <button
-              type="button"
-              aria-label={`More about ${partner.name}`}
-              aria-expanded={false}
-              className="mt-[15px] flex size-[16.4px] items-center justify-center rounded-full border border-white text-white transition-colors hover:bg-white hover:text-black"
-            >
-              <span aria-hidden="true" className="relative block size-[7px]">
-                <span className="absolute left-0 top-1/2 h-px w-full -translate-y-1/2 bg-current" />
-                <span className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-current" />
-              </span>
-            </button>
+            {/* Figma 2:1203 / 2:1201 / 2:1199 — a 16.4px circled "+" */}
+            <PartnerDisclosure name={partner.name} summary={partner.summary} />
           </li>
         ))}
       </ul>
     </section>
+  )
+}
+
+/**
+ * The AFWERX Challenge lockup, bbox 148.54 x 27.45 — the mark and two word
+ * fragments Figma exports it as. Also used by the Source page's partner row.
+ */
+export function AfwerxChallengeLogo() {
+  return (
+    <span className="relative block h-[27.45px] w-[148.54px]">
+      <Image
+        src="/brand/logos/afwerx-mark.svg"
+        alt=""
+        width={27}
+        height={27}
+        className="absolute left-0 top-0 h-[27.07px] w-[26.81px]"
+      />
+      <Image
+        src="/brand/logos/afwerx-word.svg"
+        alt=""
+        width={49}
+        height={6}
+        className="absolute left-[35.28px] top-[3.87px] h-[6.24px] w-[48.67px]"
+      />
+      <Image
+        src="/brand/logos/afwerx-challenge.svg"
+        alt=""
+        width={113}
+        height={13}
+        className="absolute left-[35.28px] top-[14.69px] h-[12.5px] w-[113.3px]"
+      />
+    </span>
   )
 }

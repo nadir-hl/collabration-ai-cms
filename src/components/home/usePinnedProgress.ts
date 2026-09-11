@@ -16,7 +16,13 @@ import { useCallback, useSyncExternalStore, type RefObject } from 'react'
  * Returns 1 when the user prefers reduced motion, so the section renders
  * resolved (its last beat) with no animation at all.
  */
-export function usePinnedProgress(ref: RefObject<HTMLElement | null>, runway: number) {
+export function usePinnedProgress(
+  ref: RefObject<HTMLElement | null>,
+  runway: number,
+  /** Start this many px before the pin engages — for animations that begin
+   *  while the section is still settling into place. 0 = start at the pin. */
+  lead = 0,
+) {
   const subscribe = useCallback((onChange: () => void) => {
     let frame = 0
     const handle = () => {
@@ -44,10 +50,11 @@ export function usePinnedProgress(ref: RefObject<HTMLElement | null>, runway: nu
     const el = ref.current
     if (!el) return 0
 
-    const travelled = -el.getBoundingClientRect().top / Math.max(1, runway)
-    // Quantised so sub-pixel scrolling doesn't re-render every frame.
-    return Math.round(Math.min(1, Math.max(0, travelled)) * 200) / 200
-  }, [ref, runway])
+    const travelled = (lead - el.getBoundingClientRect().top) / Math.max(1, runway + lead)
+    // Quantised so sub-pixel scrolling doesn't re-render every frame. 1/1000
+    // rather than coarser because a Lottie scrub maps this to ~226 frames.
+    return Math.round(Math.min(1, Math.max(0, travelled)) * 1000) / 1000
+  }, [ref, runway, lead])
 
   return useSyncExternalStore(subscribe, getSnapshot, () => 0)
 }

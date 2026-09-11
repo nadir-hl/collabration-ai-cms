@@ -26,6 +26,7 @@
   --color-brand-600: #e69100;
   --color-brand-500: #FFA820;  /* ← Figma source of truth */
   --color-brand-400: #ffb84d;
+  --color-brand-press: #FF9620; /* Figma: hover / pressed button plate (2:1016, 2:1014) */
   --color-brand-300: #ffcc80;
   --color-brand-50:  #fff4e0;
 
@@ -292,28 +293,80 @@ body {
   font-weight: 600;
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
+  /* How far the white outline sits down/right of the plate's visible edge:
+     8px at rest, 12px hover, 3px pressed (Figma Buttons 8:10 — 2:1012,
+     2:1016, 2:1014). */
+  --btn-outline: 8px;
 }
 
-/* The offset white outline — right + bottom only, drawn 8px down/right. */
+/*
+ * The white outline, per the Figma paths: the plate's right + bottom edges
+ * and its rounded corner, shifted --btn-outline down/right, joined back to
+ * the plate by two 45° legs — one from the plate's bottom-left corner, one
+ * leaving the corner arc at its 45° point (where the leg runs tangent to
+ * both arcs). Everything is placed off the plate's border box (.btn's border
+ * is 1.5px) so the legs meet the plate and the outline exactly.
+ *
+ * ::after is the shifted edge. It keeps a top border so the corner arc is a
+ * full 1px curve (its band, radius 9.35-10.35, is exactly Figma's stroke),
+ * then clips away everything above the point where the leg lands: the 45°
+ * tangent point of the stroke's centre line, radius 9.85, at
+ * 10.35 - 9.85/√2 = 3.38px from the corner. That drops the straight top edge
+ * and the upper half of the arc.
+ */
 .btn-primary::after {
   content: '';
   position: absolute;
-  inset: 8px -8px -8px 8px;
+  inset:
+    calc(var(--btn-outline) - 1.5px)
+    calc(-1.5px - var(--btn-outline))
+    calc(-1.5px - var(--btn-outline))
+    calc(var(--btn-outline) - 1.5px);
   border: 1px solid #fff;
   border-left: 0;
-  border-top: 0;
   border-top-right-radius: 10.35px;
+  clip-path: inset(3.38px 0 0 0);
   pointer-events: none;
   transition: inset var(--duration-base) var(--ease-out-expo);
 }
+/*
+ * ::before draws the two legs: the plate's box grown by --btn-outline to the
+ * right/bottom, with a --btn-outline-square tile at each leg holding a
+ * top-left -> bottom-right hairline. The tiles sit at fixed offsets from the
+ * box's corners, so they are right at any button width and in every state.
+ */
+.btn-primary::before {
+  --leg: linear-gradient(to top right, transparent calc(50% - 0.5px), #fff calc(50% - 0.5px), #fff calc(50% + 0.5px), transparent calc(50% + 0.5px));
+  content: '';
+  position: absolute;
+  inset:
+    -1.5px
+    calc(-1.5px - var(--btn-outline))
+    calc(-1.5px - var(--btn-outline))
+    -1.5px;
+  /* Arc leg: starts on the stroke centre line's 45° tangent point (3.38px in,
+     as Figma draws it — tangent to the radius-9.85 centre line, not the
+     outer edge), and its tile is 1px oversize at the far end so the hairline
+     runs into the outline's arc instead of being cut short by the tile. */
+  background:
+    var(--leg) left 0 bottom 0 / var(--btn-outline) var(--btn-outline) no-repeat,
+    var(--leg) right 2.38px top 3.38px / calc(var(--btn-outline) + 1px) calc(var(--btn-outline) + 1px) no-repeat;
+  pointer-events: none;
+  transition:
+    inset var(--duration-base) var(--ease-out-expo),
+    background-size var(--duration-base) var(--ease-out-expo);
+}
 
 .btn-primary:hover {
-  background: var(--color-brand-400);
-  border-color: var(--color-brand-400);
+  background: var(--color-brand-press);
+  border-color: var(--color-brand-press);
+  --btn-outline: 12px;
 }
-/* On hover the plate slides into its own outline. */
-.btn-primary:hover::after { inset: 4px -4px -4px 4px; }
-.btn-primary:active::after { inset: 0; }
+.btn-primary:active {
+  background: var(--color-brand-press);
+  border-color: var(--color-brand-press);
+  --btn-outline: 3px;
+}
 
 /* Secondary — outlined amber on dark */
 .btn-secondary {
@@ -329,6 +382,35 @@ body {
 .btn-secondary:hover {
   background: var(--color-brand-500);
   color: var(--color-text-on-accent);
+}
+
+/*
+ * Vertical primary — the tablet left strip's CTA (Figma 138:677). The same
+ * notched button turned on its side: the label reads top-to-bottom, the
+ * rounded corner moves to bottom-left, and the white outline stays on the
+ * right + bottom edges. Its two 45° legs mirror across: the square-corner
+ * leg moves to the top-right, the arc leg to the bottom-left, where the turned
+ * Figma path has them. Size is set by the caller; the font size is set here
+ * because .btn's is unlayered and would beat a text-* utility. Figma: Poppins
+ * SemiBold 14, tracking 20%.
+ */
+.btn-primary-vertical {
+  writing-mode: vertical-rl;
+  font-size: 0.875rem;
+  border-top-right-radius: 0;
+  border-bottom-left-radius: 10.35px;
+}
+.btn-primary-vertical::after {
+  border-top: 0;
+  border-left: 1px solid #fff;
+  border-top-right-radius: 0;
+  border-bottom-left-radius: 10.35px;
+  clip-path: inset(0 0 0 3.38px);
+}
+.btn-primary-vertical::before {
+  background:
+    var(--leg) right 0 top 0 / var(--btn-outline) var(--btn-outline) no-repeat,
+    var(--leg) left 3.38px bottom 2.38px / calc(var(--btn-outline) + 1px) calc(var(--btn-outline) + 1px) no-repeat;
 }
 
 /* Outline — minimal bordered, no fill (low-emphasis) */

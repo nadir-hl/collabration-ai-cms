@@ -55,13 +55,38 @@ const GAP_PX = 24
  * whole render loop, rAF included), which silently pinned the width to its
  * fallback — layout, by contrast, is always computed.
  *
- *   card    = (100cqi - 2·GAP) / 2.5
- *   strip   = 4·card + 3·GAP  = 1.6·(100cqi) - 4.8px
- *   scrollable = strip - 100cqi = 60cqi - 4.8px
+ * The mask spans the whole centre column, from the divider on the left
+ * panel's edge to the rail, so cards stay visible as they scrub left all the
+ * way to that white line rather than being cut at the content inset. At rest
+ * the row still starts at the content inset (ROW_START: CENTER_PL expressed in
+ * the mask's own cqi — the mask is the full column, so they measure the same),
+ * and the composition is solved against what lies to the right of it.
+ *
+ * Cards are 80px narrower than the composition alone would make them, at the
+ * client's request, floored at CARD_MIN_W_PX so the text column stays
+ * readable on smaller desktops (a flat -80px leaves ~145px of text at 1400).
+ *
+ *   visible = 100cqi - ROW_START
+ *   card    = max(CARD_MIN_W, (visible - 2·GAP) / 2.5 - 80px)
+ *   strip   = 4·card + 3·GAP
+ *   scroll  = ROW_START + strip - 100cqi     (the last card ends at the rail)
  */
-const CARD_W_CSS = `calc((100cqi - ${2 * GAP_PX}px) / 2.5)`
-const STRIP_W_CSS = `calc(${4} * ${CARD_W_CSS} + ${3 * GAP_PX}px)`
-const MAX_SCROLL_CSS = `calc(60cqi - 4.8px)`
+const ROW_START_CSS = `${parseFloat(CENTER_PL)}cqi`
+const CARD_MIN_W_PX = 270
+const CARD_W_CSS = `max(${CARD_MIN_W_PX}px, (100cqi - ${ROW_START_CSS} - ${2 * GAP_PX}px) / 2.5 - 80px)`
+const STRIP_W_CSS = `calc(4 * ${CARD_W_CSS} + ${3 * GAP_PX}px)`
+const MAX_SCROLL_CSS = `calc(${ROW_START_CSS} + ${STRIP_W_CSS} - 100cqi)`
+
+/**
+ * Pinned-row card height, taller than the content alone at the client's
+ * request. It grows with the viewport because the pin is h-screen and clips:
+ * 22rem is what the pinned view needs besides the cards (the intro block,
+ * ~210-230px, the 48px gap, and ~45px of air above and below), capped at
+ * 34rem. On short viewports this falls below the content height and the card
+ * simply hugs its content, so nothing is ever clipped by it. The extra height
+ * opens between the description and the button (the description is flex-1).
+ */
+const CARD_MIN_H_CSS = 'min(34rem, calc(100vh - 22rem))'
 
 /**
  * "The solution" — the four NetworkOS product cards.
@@ -106,14 +131,14 @@ export function SolutionPanel() {
         style={{ height: `calc(100vh + ${SOLUTION_SCRUB_RUNWAY}px)` }}
       >
         <div
-          className="sticky top-0 flex h-screen flex-col justify-center overflow-hidden lg:pl-[var(--pl)]"
+          className="sticky top-0 flex h-screen flex-col justify-center overflow-hidden"
           style={{ '--pl': CENTER_PL, '--pr': CENTER_PR } as React.CSSProperties}
         >
-          {/* Only the intro text keeps the usual right inset — the card row
-              below is deliberately let run wider, right up to the rail (see
-              the doc comment above). Both inherit the left inset from the
-              container's own lg:pl above; neither needs it again. */}
-          <div className="lg:pr-[var(--pr)]">
+          {/* Only the intro text keeps the usual insets. The card row's mask
+              below deliberately runs the full column, from the divider to the
+              rail (see the geometry notes above); the row itself starts at
+              the content inset via ROW_START. */}
+          <div className="lg:pl-[var(--pl)] lg:pr-[var(--pr)]">
             <Intro />
           </div>
 
@@ -123,11 +148,17 @@ export function SolutionPanel() {
               className="flex gap-6"
               style={{
                 width: STRIP_W_CSS,
+                marginLeft: ROW_START_CSS,
                 transform: `translateY(${(rise * 100).toFixed(1)}%) translateX(calc(-1 * ${scrub.toFixed(4)} * ${MAX_SCROLL_CSS}))`,
               }}
             >
               {PRODUCTS.map((product) => (
-                <ProductCard key={product.name} width={CARD_W_CSS} {...product} />
+                <ProductCard
+                  key={product.name}
+                  width={CARD_W_CSS}
+                  minHeight={CARD_MIN_H_CSS}
+                  {...product}
+                />
               ))}
             </div>
           </div>
@@ -217,12 +248,18 @@ function ProductCard({
   href,
   description,
   width = '300px',
-}: Product & { width?: string }) {
+  minHeight,
+}: Product & { width?: string; minHeight?: string }) {
   return (
     <Link
       href={href}
-      className="group flex shrink-0 flex-col rounded-tr-[2.06rem] bg-[#636363]/80 p-8 transition-colors hover:bg-[#636363]"
-      style={{ width }}
+      // Vertical padding. Mobile (not pinned): a flat 56px. Tablet (lg to xl):
+      // 32px — the cards are at their narrowest there, so their text wraps
+      // longest and the pinned row (h-screen) has no room to spare. Desktop:
+      // 32-56px scaled with viewport height, so a short laptop viewport
+      // (~1366x650) still fits the pinned row instead of clipping its bottom.
+      className="group flex shrink-0 flex-col rounded-tr-[2.06rem] bg-[#636363]/80 px-8 py-14 transition-colors hover:bg-[#636363] lg:max-xl:py-8 xl:py-[clamp(2rem,calc((100vh_-_520px)/5),3.5rem)]"
+      style={{ width, minHeight }}
     >
       <p className="section-label">NetworkOS</p>
       <h3 className="mt-1 text-xl font-bold text-white">{name}</h3>

@@ -30,7 +30,8 @@ export async function generateMetadata({ params }: Args): Promise<Metadata> {
 }
 
 export async function generateStaticParams() {
-  return ['source', 'decide', 'acquire', 'intelligence'].map((slug) => ({ slug }))
+  // Source has its own route (products/source), which takes precedence.
+  return ['decide', 'acquire', 'intelligence'].map((slug) => ({ slug }))
 }
 
 const allProducts: Array<{ name: string; slug: string; Icon: LucideIcon }> = [

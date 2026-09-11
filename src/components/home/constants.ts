@@ -11,6 +11,39 @@ export const PANEL_W = '34.142857%'
 export const RAIL_W = '4rem'
 
 /**
+ * Right rail with the assistant open. Figma 138:1031 mocks it at 350px, but it
+ * matches the desktop left panel exactly: the left panel collapses to nothing
+ * at the same time (see AssistantShell), so opening reads as the panel
+ * changing sides. On tablet the left panel is the narrow strip, but the
+ * assistant keeps this width — 350px at 1024, which is Figma's mock size.
+ */
+export const ASSISTANT_W = PANEL_W
+
+/** Left panel on tablet (lg up to xl): the 113px strip, Figma 138:588. */
+export const STRIP_W = '7.0625rem'
+
+/**
+ * Resting left-panel width per breakpoint, published as --panel-w for
+ * AssistantShell. Tailwind needs literal values in the class, so this repeats
+ * STRIP_W (below xl) and PANEL_W (xl up) — keep them in step.
+ */
+export const PANEL_W_VAR = '[--panel-w:7.0625rem] xl:[--panel-w:34.142857%]'
+
+/**
+ * Width for the content INSIDE a column that animates between PANEL_W and a
+ * narrower width (the left panel, the rail assistant). It holds on to the open
+ * width while the column narrows, so content slides behind the column's clip
+ * instead of reflowing. At full width 100% always wins — the 6px covers the
+ * up-to-0.34 x scrollbar gap between vw and the column's % — so the open
+ * layout is exact.
+ */
+export const PANEL_HOLD_W = 'lg:w-[max(100%,34.142857vw_-_6px)]'
+
+/** Timing shared by everything that moves when the assistant opens/closes. */
+export const ASSISTANT_EASE =
+  'duration-500 ease-[var(--ease-out-expo)] motion-reduce:transition-none'
+
+/**
  * Extra darkening on the left panel, on top of the page-level black/78 scrim.
  *
  * DELIBERATE DEVIATION FROM FIGMA. The file stacks a second black/78 there
@@ -61,6 +94,14 @@ export const CENTER_PR = '13.45%' // 115 / 855
  * dragging. Raise it to slow the scrub down, lower it to speed it up.
  */
 export const PROBLEM_SCRUB_RUNWAY = 2000
+
+/**
+ * The Knows/Missing diagram (KnowsMissingDiagram). The frame pins once the
+ * two circles have met, and over this much scroll the orange floods it, the
+ * card grows to the full centre panel, and the product animation draws its
+ * network graph in — frame for frame with the scroll, like the Problem pin.
+ */
+export const DIAGRAM_SCRUB_RUNWAY = 1600
 
 /**
  * "The solution" product-card row. Same pin-then-scrub mechanic as

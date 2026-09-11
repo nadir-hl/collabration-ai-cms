@@ -15,7 +15,7 @@ import { CENTER_PL, CENTER_PR, TOP_ROW_H } from './constants'
 export function ChallengePanel() {
   return (
     <section
-      className="relative min-w-0 px-8 pb-16 lg:pl-[var(--pl)] lg:pr-[var(--pr)]"
+      className="relative min-w-0 pb-16"
       style={
         {
           '--pl': CENTER_PL,
@@ -23,7 +23,9 @@ export function ChallengePanel() {
         } as React.CSSProperties
       }
     >
-      <div>
+      {/* The text keeps the column padding; the diagram below manages its own,
+          because it grows out to the full width of the panel. */}
+      <div className="px-8 lg:pl-[var(--pl)] lg:pr-[var(--pr)]">
         {/* Top row — vertical centre matches the wordmark and the slide arrows */}
         <div className="flex items-center" style={{ height: TOP_ROW_H }}>
           <p className="section-label w-full text-center">The challenge</p>
@@ -44,9 +46,9 @@ export function ChallengePanel() {
             people and priorities change.
           </p>
         </div>
-
-        <KnowsMissingDiagram />
       </div>
+
+      <KnowsMissingDiagram />
     </section>
   )
 }

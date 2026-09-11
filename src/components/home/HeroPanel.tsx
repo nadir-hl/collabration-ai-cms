@@ -25,7 +25,8 @@ export function HeroPanel() {
 
   return (
     <div
-      className="relative z-10 flex h-full flex-col px-8 pb-16 lg:px-14"
+      // Hidden from lg to xl, where HeroStrip stands in for it (tablet).
+      className="relative z-10 flex h-full flex-col px-8 pb-16 lg:px-14 lg:max-xl:hidden"
       style={{
         paddingTop: TOP_PAD,
         // Sits on top of the page-level black/78 from page.tsx. See PANEL_SCRIM
@@ -43,7 +44,10 @@ export function HeroPanel() {
         </Link>
       </div>
 
-      <div className="mt-[63px] max-w-[24rem]">
+      {/* Capped on mobile, where the panel is full width. From lg the content
+          runs to the panel's own padding, so the right inset matches the left
+          at every panel width instead of growing as the panel does. */}
+      <div className="mt-[63px] max-w-[24rem] lg:max-w-none">
         <p className="section-label">Software for program offices</p>
 
         {/*
@@ -86,7 +90,7 @@ export function HeroPanel() {
         </p>
       </div>
 
-      <div className="mt-12 max-w-[377px]">
+      <div className="mt-12 max-w-[377px] lg:max-w-none">
         <Link href="/contact" className="btn btn-primary btn-lg w-full">
           Talk to our team
         </Link>
